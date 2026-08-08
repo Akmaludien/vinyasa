@@ -1,4 +1,4 @@
-import type { ExtractResult, ColorToken } from "./types";
+import type { DesignModel, ColorToken } from "./model";
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -29,15 +29,16 @@ function pickTextColor(hex: string): string {
   return lum > 0.55 ? "#171717" : "#ffffff";
 }
 
-export function buildPreviewHtml(r: ExtractResult): string {
-  const bestFamily = r.fonts.families[0]?.raw ?? "system-ui, sans-serif";
-  const bodyBg = r.colors.neutral[0]?.hex ?? "#ffffff";
-  const fg = r.colors.neutral.find((c) => c.hex !== bodyBg)?.hex ?? "#1a1a1a";
-  const primary = r.colors.primary[0]?.hex ?? "#3b82f6";
-  const radiusTok = r.radius[0]?.raw ?? "8px";
+export function buildPreviewHtml(r: DesignModel): string {
+  const bestFamily = r.tokens.typography.families[0]?.raw ?? "system-ui, sans-serif";
+  const bodyBg = r.tokens.colors.neutral[0]?.hex ?? "#ffffff";
+  const fg = r.tokens.colors.neutral.find((c) => c.hex !== bodyBg)?.hex ?? "#1a1a1a";
+  const primary = r.tokens.colors.primary[0]?.hex ?? "#3b82f6";
+  const radiusTok = r.tokens.radius[0]?.raw ?? "8px";
   const btnText = pickTextColor(primary);
+  const scores = r.pages[0]?.scores ?? { overall: 0 };
 
-  const typeRows = r.textStyles
+  const typeRows = r.tokens.textStyles
     .slice(0, 5)
     .map((t) => {
       return `
@@ -55,7 +56,7 @@ export function buildPreviewHtml(r: ExtractResult): string {
     })
     .join("");
 
-  const radiusRows = r.radius
+  const radiusRows = r.tokens.radius
     .slice(0, 6)
     .map(
       (rad) => `
@@ -66,7 +67,7 @@ export function buildPreviewHtml(r: ExtractResult): string {
     )
     .join("");
 
-  const famChips = r.fonts.families
+  const famChips = r.tokens.typography.families
     .map((f) => `<code>${esc(f.raw)}</code>`)
     .join(" ");
 
@@ -75,7 +76,7 @@ export function buildPreviewHtml(r: ExtractResult): string {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pratinjau Token — ${esc(r.title)}</title>
+<title>Pratinjau Token — ${esc(r.source.title)}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: ${esc(bestFamily)}; background: ${bodyBg}; color: ${fg}; padding: 40px 24px; }
@@ -106,13 +107,13 @@ export function buildPreviewHtml(r: ExtractResult): string {
 </style>
 </head>
 <body>
-  <div class="cap">Design system preview · ${esc(r.url)}</div>
-  <h1>${esc(r.title)}</h1>
-  <p class="muted">Skor akurasi: ${r.scores.overall}/100</p>
+  <div class="cap">Design system preview · ${esc(r.source.url)}</div>
+  <h1>${esc(r.source.title)}</h1>
+  <p class="muted">Skor akurasi: ${scores.overall}/100</p>
 
   <h2>Warna</h2>
-  ${swatchRow("Primer", r.colors.primary)}
-  ${swatchRow("Netral", r.colors.neutral)}
+  ${swatchRow("Primer", r.tokens.colors.primary)}
+  ${swatchRow("Netral", r.tokens.colors.neutral)}
 
   <h2>Tipografi</h2>
   <h3>Font family yang terdeteksi</h3>

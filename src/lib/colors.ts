@@ -1,4 +1,4 @@
-import type { Rgb } from "./types";
+import type { Rgb } from "./model";
 
 const NAMED: Record<string, [number, number, number]> = {
   black: [0, 0, 0],

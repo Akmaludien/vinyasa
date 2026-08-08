@@ -1,4 +1,4 @@
-import type { ExtractResult } from "./types";
+import type { DesignModel } from "./model";
 
 function fmtBytes(n: number): string {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -6,13 +6,19 @@ function fmtBytes(n: number): string {
   return `${n} B`;
 }
 
-export function buildDesignMd(r: ExtractResult): string {
-  const { colors, fonts, textStyles, radius, sources, scores } = r;
+export function buildDesignMd(r: DesignModel): string {
+  const { tokens } = r;
+  const colors = tokens.colors;
+  const fonts = tokens.typography;
+  const textStyles = tokens.textStyles;
+  const radius = tokens.radius;
+  const sources = r.pages[0]?.sources ?? [];
+  const scores = r.pages[0]?.scores ?? { color: 0, typography: 0, radius: 0, overall: 0 };
   const lines: string[] = [];
 
-  lines.push(`# Design System — ${r.title}`);
+  lines.push(`# Design System — ${r.source.title}`);
   lines.push("");
-  lines.push(`> Diekstrak dari **${r.url}** pada ${new Date(r.generatedAt).toLocaleString("id-ID")}.`);
+  lines.push(`> Diekstrak dari **${r.source.url}** pada ${new Date(r.metadata.generatedAt).toLocaleString("id-ID")}.`);
   lines.push("");
   lines.push(`**Skor akurasi keseluruhan: ${scores.overall}/100**`);
   lines.push("");
@@ -95,16 +101,42 @@ export function buildDesignMd(r: ExtractResult): string {
     lines.push("");
   }
 
-  lines.push("---");
-  lines.push("");
-  lines.push("## Border radius");
-  lines.push("");
-  lines.push("| Nilai | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- |");
-  for (const r2 of radius) {
-    lines.push(`| \`${r2.raw}\` | ${r2.count} | ${r2.usage}% |`);
+  if (radius.length > 0) {
+    lines.push("---");
+    lines.push("");
+    lines.push("## Border radius");
+    lines.push("");
+    lines.push("| Nilai | Frekuensi | Porsi |");
+    lines.push("| --- | --- | --- |");
+    for (const r2 of radius) {
+      lines.push(`| \`${r2.raw}\` | ${r2.count} | ${r2.usage}% |`);
+    }
+    lines.push("");
   }
-  lines.push("");
+
+  if (tokens.spacing.length > 0) {
+    lines.push("---");
+    lines.push("");
+    lines.push("## Spacing (margin / padding / gap)");
+    lines.push("");
+    lines.push("| Nilai | Frekuensi | Porsi |");
+    lines.push("| --- | --- | --- |");
+    for (const s of tokens.spacing) {
+      lines.push(`| \`${s.raw}\` | ${s.count} | ${s.usage}% |`);
+    }
+    lines.push("");
+  }
+
+  if (tokens.shadows.length > 0) {
+    lines.push("---");
+    lines.push("");
+    lines.push("## Shadows");
+    lines.push("");
+    for (const s of tokens.shadows) {
+      lines.push(`- \`${s.raw}\``);
+    }
+    lines.push("");
+  }
 
   lines.push("---");
   lines.push("");

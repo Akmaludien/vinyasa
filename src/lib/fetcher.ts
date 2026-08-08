@@ -1,4 +1,4 @@
-import type { CssSourceInput } from "./types";
+import type { CssSourceInput } from "./model";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -6,6 +6,27 @@ const UA =
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
 const MAX_CSS_BYTES = 2 * 1024 * 1024;
 const FETCH_TIMEOUT = 12000;
+
+export function isPrivateHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/\[|\]|\.$/g, "");
+  if (h === "localhost" || h === "::1" || h.endsWith(".localhost")) return true;
+  if (/\.local$/.test(h)) return true;
+  if (/^0\.|^10\.|^127\.|^169\.254\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\./.test(h)) return true;
+  const ipv6 = h.toLowerCase();
+  if (ipv6.startsWith("fe80") || ipv6.startsWith("fc") || ipv6.startsWith("fd") || ipv6 === "::1") return true;
+  return false;
+}
+
+export function isSafeUrl(raw: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+  return !isPrivateHost(u.hostname);
+}
 
 export async function fetchUrl(url: string): Promise<{ status: number; html: string }> {
   const controller = new AbortController();

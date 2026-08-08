@@ -35,7 +35,7 @@ Website → Discovery → Extraction → Normalization → Canonical Design Mode
 
 **Export Engine** — satu aksi menghasilkan: `tokens.json` (DTCG-compatible), `tokens.css`, `tailwind.css`, `DESIGN.md`, `raw.json`, `README.md`, bisa salin/download per file.
 
-**AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review/tinjauan, test connection, auto-switch saat 429 (roadmap), AI Chat (roadmap).
+**AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review, **AI Chat grounded di DesignModel**, test connection, **auto-switch model saat 429** (transparan).
 
 ## Tech stack
 
@@ -95,9 +95,9 @@ src/
 | 4. Export Engine | ✅ |
 | 5. Design Health | ✅ |
 | 6. Accessibility/WCAG | ✅ |
-| 7. Responsive Intelligence | roadmap |
+| 7. Responsive Intelligence | ✅ (CSS-heuristic; visual via Deep Scan) |
 | 8. Deep Scan (Playwright) | roadmap |
-| 9. Component detection | roadmap |
-| 10. AI (Custom provider, chat) | roadmap |
+| 9. Component detection | ✅ (heuristik selector) |
+| 10. AI (Custom provider, chat) | ✅ |
 | 11–13. Playground / Diff / Drift | roadmap |
 | 14. Hardening | di tiap fase |

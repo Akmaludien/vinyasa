@@ -5,11 +5,12 @@ import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
 import { buildDesignMd, buildDownloadFilename } from "@/lib/design-md";
 import { buildPreviewHtml } from "@/lib/preview";
 import { buildExports } from "@/lib/export";
-import { callAi, loadConfig } from "@/lib/ai";
+import { callAiWithAutoSwitch, loadConfig } from "@/lib/ai";
 import { AiSettingsButton } from "@/components/AiSettings";
 import type { AiConfig } from "@/lib/ai";
 import type { HealthReport, HealthCategory } from "@/lib/health";
 import type { A11yReport } from "@/lib/accessibility";
+import type { ResponsiveReport } from "@/lib/responsive";
 
 type Tab =
   | "colors"
@@ -17,6 +18,8 @@ type Tab =
   | "spacing"
   | "shapes"
   | "effects"
+  | "components"
+  | "responsive"
   | "health"
   | "accessibility"
   | "export"
@@ -415,6 +418,48 @@ function PreviewPanel({ result }: { result: DesignModel }) {
   );
 }
 
+function ComponentsPanel({ result }: { result: DesignModel }) {
+  const components = result.components;
+  if (!components || components.length === 0) {
+    return <p className="text-sm text-zinc-500">Tidak ada pola komponen yang terdeteksi.</p>;
+  }
+  return (
+    <>
+      <SectionHeader title="Pola komponen" subtitle="Heuristik berbasis selector — bukan kepastian" />
+      <div className="grid gap-3 md:grid-cols-2">
+        {components.map((c) => (
+          <div key={c.name} className="rounded-xl border border-zinc-800 p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">{c.name}</div>
+              <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400">
+                {c.confidence}% · x{c.count}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {c.selectors.slice(0, 5).map((sel) => (
+                <code key={sel} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-400">
+                  {sel}
+                </code>
+              ))}
+            </div>
+            {Object.keys(c.properties).length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">
+                {Object.entries(c.properties)
+                  .slice(0, 4)
+                  .map(([prop, vals]) => (
+                    <span key={prop}>
+                      {prop}: {vals.slice(0, 3).join(", ")}
+                    </span>
+                  ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function HealthBar({ value }: { value: number }) {
   const color = value >= 85 ? "bg-emerald-500" : value >= 65 ? "bg-amber-500" : "bg-red-500";
   return (
@@ -453,6 +498,60 @@ function HealthCategoryCard({ cat }: { cat: HealthCategory }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function ResponsivePanel({ result }: { result: DesignModel }) {
+  const r = result.responsive as ResponsiveReport | null;
+  if (!r) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
+  const tiers = [
+    ["Mobile", r.mobile],
+    ["Tablet", r.tablet],
+    ["Desktop", r.desktop],
+  ] as Array<[string, number]>;
+  return (
+    <>
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        {tiers.map(([label, value]) => (
+          <div key={label} className="rounded-xl border border-zinc-800 p-3 text-center">
+            <div className="text-xs text-zinc-500">{label}</div>
+            <div className="mt-1 text-lg font-bold">{value}</div>
+            <ScoreBar value={value} />
+          </div>
+        ))}
+      </div>
+      {r.breakpoints.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2 text-xs">
+          {r.breakpoints.map((b) => (
+            <span key={`${b.feature}-${b.value}`} className="rounded-full border border-zinc-800 px-2.5 py-1">
+              {b.feature}: {b.value} {b.px !== null && <span className="text-zinc-500">({b.px}px)</span>}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-col gap-2">
+        {r.issues.map((iss, i) => (
+          <div key={i} className="rounded-xl border border-zinc-800 p-3">
+            <div className="flex items-center gap-2">
+              <span
+                className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                  iss.severity === "warning" ? "bg-amber-500 text-black" : "bg-zinc-600 text-white"
+                }`}
+              >
+                {iss.severity}
+              </span>
+              <span className="text-sm font-medium">{iss.kind}</span>
+            </div>
+            <p className="mt-1 text-sm">{iss.message}</p>
+            {iss.recommendation && <p className="mt-1 text-xs text-zinc-400">{iss.recommendation}</p>}
+            {iss.evidence.length > 0 && (
+              <code className="mt-1 block text-[11px] text-zinc-500">{iss.evidence.join(" · ")}</code>
+            )}
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[11px] text-zinc-600">{r.note}</p>
+    </>
   );
 }
 
@@ -598,26 +697,64 @@ function AiPanel({
   onChange: (c: AiConfig | null) => void;
 }) {
   const md = useMemo(() => buildDesignMd(result), [result]);
+  const modelContext = useMemo(
+    () => buildModelContext(result),
+    [result],
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [output, setOutput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
+  const [switchedNote, setSwitchedNote] = useState("");
 
-  async function generate(mode: "readme" | "review") {
+  function guard(): boolean {
     if (!config) {
       setError("Pasang API key AI dulu lewat tombol 'Atur AI' di atas.");
-      return;
+      return false;
     }
-    setBusy(true);
     setError("");
+    return true;
+  }
+
+  async function generate(mode: "readme" | "review") {
+    if (!guard()) return;
+    const cfg = config!;
+    setBusy(true);
     setOutput("");
+    setSwitchedNote("");
     const prompt =
       mode === "readme"
         ? `Berikut hasil ekstraksi design system dari ${result.source.url}:\n\n${md}\n\nBuatkan README.md ringkas (Bahasa Indonesia) yang menjelaskan design system ini: palet warna, tipografi, radius, dan panduan pemakaiannya. Format markdown.`
         : `Berikut hasil ekstraksi design system dari ${result.source.url}:\n\n${md}\n\nBuat tinjauan desain (Bahasa Indonesia): kekuatan, kelemahan, dan saran perbaikan. Ringkas.`;
     try {
-      const out = await callAi(config, prompt);
+      const out = await callAiWithAutoSwitch(cfg, prompt, undefined, undefined, (from, to) =>
+        setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`),
+      );
       setOutput(out);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal menghubungi AI.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendChat() {
+    const text = chatInput.trim();
+    if (!text || busy) return;
+    if (!guard()) return;
+    const cfg = config!;
+    setChatInput("");
+    setChatHistory((h) => [...h, { role: "user", text }]);
+    setBusy(true);
+    setSwitchedNote("");
+    const prompt = `Konteks DesignModel Vinyasa untuk ${result.source.url}:\n${modelContext}\n\nPertanyaan: ${text}`;
+    try {
+      const out = await callAiWithAutoSwitch(cfg, prompt, undefined, undefined, (from, to) =>
+        setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`),
+      );
+      setChatHistory((h) => [...h, { role: "ai", text: out }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menghubungi AI.");
     } finally {
@@ -643,7 +780,7 @@ function AiPanel({
           disabled={busy}
           className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-60"
         >
-          {busy ? "Menghasilkanâ€¦" : "Generate README dengan AI"}
+          {busy ? "Menghasilkan…" : "Generate README dengan AI"}
         </button>
         <button
           onClick={() => generate("review")}
@@ -654,7 +791,46 @@ function AiPanel({
         </button>
         <AiSettingsButton config={config} onChange={onChange} />
       </div>
+      {switchedNote && <p className="mb-3 text-xs text-amber-400">{switchedNote}</p>}
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+
+      <div className="mb-5 rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+        <div className="mb-2 text-[11px] uppercase tracking-wide text-zinc-500">
+          AI Chat — grounded di DesignModel ({result.source.title})
+        </div>
+        <div className="mb-2 flex max-h-64 flex-col gap-2 overflow-auto">
+          {chatHistory.length === 0 && (
+            <p className="text-xs text-zinc-600">
+              Contoh: {"“Kenapa desain ini terasa tidak konsisten?”, “Cari outlier spacing.”, “Apa yang salah di mobile?”, “Generate DESIGN.md.”"}
+            </p>
+          )}
+          {chatHistory.map((c, i) => (
+            <div key={i} className={`text-xs leading-5 ${c.role === "ai" ? "text-zinc-300" : "text-zinc-100"}`}>
+              <span className="mr-1 font-semibold">{c.role === "ai" ? "AI" : "Kamu"}:</span>
+              <span className="whitespace-pre-wrap">{c.text}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") sendChat();
+            }}
+            placeholder="Tanya tentang design system ini…"
+            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
+          />
+          <button
+            onClick={sendChat}
+            disabled={busy || !chatInput.trim()}
+            className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-50"
+          >
+            Kirim
+          </button>
+        </div>
+      </div>
+
       {output && (
         <>
           <div className="mb-2 flex justify-end">
@@ -665,13 +841,41 @@ function AiPanel({
               {copied ? "Tersalin!" : "Salin"}
             </button>
           </div>
-          <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs leading-6 text-zinc-300">
+          <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs leading-6 text-zinc-300">
             {output}
           </pre>
         </>
       )}
     </>
   );
+}
+
+function buildModelContext(result: DesignModel): string {
+  const t = result.tokens;
+  const health = result.health as { overall?: number } | null;
+  const a11y = result.accessibility as { issues?: Array<{ severity: string; message: string }> } | null;
+  const lines: string[] = [];
+  lines.push(`URL: ${result.source.url}`);
+  lines.push(`Judul: ${result.source.title}`);
+  lines.push(
+    `Warna primer: ${t.colors.primary.slice(0, 5).map((c) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
+  );
+  lines.push(
+    `Warna netral: ${t.colors.neutral.slice(0, 5).map((c) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
+  );
+  lines.push(`Font family: ${t.typography.families.slice(0, 4).map((f) => f.raw).join(" | ")}`);
+  lines.push(
+    `Ukuran font (px): ${t.typography.sizes.slice(0, 6).map((s) => s.px).join(", ")}`,
+  );
+  lines.push(`Spacing: ${t.spacing.slice(0, 8).map((s) => s.raw).join(", ")}`);
+  lines.push(`Radius: ${t.radius.slice(0, 5).map((r) => r.raw).join(", ")}`);
+  lines.push(`Breakpoints: ${t.breakpoints.map((b) => `${b.feature} ${b.raw}`).join(", ") || "tidak terdeteksi"}`);
+  lines.push(`Gradient: ${t.gradients.length} · Shadow: ${t.shadows.length} · Motion: ${t.durations.length}`);
+  if (health?.overall !== undefined) lines.push(`Design Health overall: ${health.overall}/100`);
+  if (a11y?.issues?.length) {
+    lines.push(`A11y issues: ${a11y.issues.length} (${a11y.issues[0].severity})`);
+  }
+  return lines.join("\n");
 }
 
 export function FullReport({ response }: { response: ExtractResponse }) {
@@ -689,6 +893,8 @@ export function FullReport({ response }: { response: ExtractResponse }) {
     { id: "spacing", label: "Spacing" },
     { id: "shapes", label: "Shapes" },
     { id: "effects", label: "Efek" },
+    { id: "components", label: "Komponen" },
+    { id: "responsive", label: "Responsif" },
     { id: "health", label: "Health" },
     { id: "accessibility", label: "Aksesibilitas" },
     { id: "export", label: "Export" },
@@ -772,6 +978,8 @@ export function FullReport({ response }: { response: ExtractResponse }) {
         {tab === "spacing" && <SpacingPanel result={result} />}
         {tab === "shapes" && <ShapesPanel result={result} />}
         {tab === "effects" && <EffectsPanel result={result} />}
+        {tab === "components" && <ComponentsPanel result={result} />}
+        {tab === "responsive" && <ResponsivePanel result={result} />}
         {tab === "health" && <HealthPanel result={result} />}
         {tab === "accessibility" && <A11yPanel result={result} />}
         {tab === "export" && <ExportPanel result={result} />}

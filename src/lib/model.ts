@@ -1,6 +1,11 @@
 export const DESIGN_MODEL_SCHEMA_VERSION = "1.0.0";
 export const TOOL_NAME = "vinyasa";
-export const TOOL_VERSION = "0.2.0";
+export const TOOL_VERSION = "0.3.0";
+
+import type { ComponentReport } from "./components";
+import type { HealthReport } from "./health";
+import type { A11yReport } from "./accessibility";
+import type { ResponsiveReport } from "./responsive";
 
 export type ScanMode = "fast" | "deep";
 export type ScanScopeKind = "smart" | "landing" | "pages" | "all" | "custom";
@@ -237,10 +242,10 @@ export interface DesignModel {
   pages: PageScan[];
   tokens: DesignTokens;
   statistics: DesignStatistics;
-  health: unknown | null;
-  accessibility: unknown | null;
-  responsive: unknown | null;
-  components: unknown[];
+  health: HealthReport | null;
+  accessibility: A11yReport | null;
+  responsive: ResponsiveReport | null;
+  components: ComponentReport["components"];
 }
 
 export interface ExtractError {

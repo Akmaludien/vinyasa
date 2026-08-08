@@ -1,4 +1,7 @@
 import type { DesignModel } from "./model";
+import type { HealthReport } from "./health";
+import type { A11yReport } from "./accessibility";
+import type { ResponsiveReport } from "./responsive";
 
 function fmtBytes(n: number): string {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -158,6 +161,54 @@ export function buildDesignMd(r: DesignModel): string {
   lines.push("- Token diekstrak dari CSS yang benar-benar dimuat halaman (stylesheet eksternal, blok `<style>`, dan atribut `style`).");
   lines.push("- Frekuensi = berapa kali nilai muncul di seluruh rule CSS.");
   lines.push("- Skor akurasi = proporsi deklarasi yang berhasil diparsing terhadap total deklarasi pada kategori tersebut.");
+
+  const health = r.health as HealthReport | null;
+  if (health) {
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push("## Design Health");
+    lines.push("");
+    lines.push(`**Skor keseluruhan: ${health.overall}/100**`);
+    lines.push("");
+    lines.push("| Kategori | Skor |");
+    lines.push("| --- | --- |");
+    for (const cat of [health.color, health.typography, health.spacing, health.radius, health.component]) {
+      lines.push(`| ${cat.name} | ${cat.score}/100 |`);
+      if (cat.outliers.length > 0) {
+        lines.push(`|  | _Outlier: ${cat.outliers.join(", ")}_ |`);
+      }
+    }
+  }
+
+  const a11y = r.accessibility as A11yReport | null;
+  if (a11y) {
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push("## Aksesibilitas (WCAG)");
+    lines.push("");
+    lines.push(`- AA: ${a11y.wcagAA.critical} gagal, ${a11y.wcagAA.warning} peringatan, ${a11y.wcagAA.pass} lolos`);
+    lines.push(`- AAA: ${a11y.wcagAAA.critical} gagal, ${a11y.wcagAAA.warning} peringatan, ${a11y.wcagAAA.pass} lolos`);
+    for (const iss of a11y.issues.slice(0, 6)) {
+      lines.push(`- [${iss.severity}] ${iss.message}`);
+    }
+    lines.push("");
+    lines.push("> Analisis otomatis — bukan sertifikasi WCAG resmi.");
+  }
+
+  const resp = r.responsive as ResponsiveReport | null;
+  if (resp) {
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push("## Responsif");
+    lines.push("");
+    lines.push(`- Mobile: ${resp.mobile}/100 · Tablet: ${resp.tablet}/100 · Desktop: ${resp.desktop}/100`);
+    if (resp.breakpoints.length > 0) {
+      lines.push(`- Breakpoints: ${resp.breakpoints.map((b) => `${b.feature} ${b.value}`).join(", ")}`);
+    }
+  }
 
   return lines.join("\n");
 }

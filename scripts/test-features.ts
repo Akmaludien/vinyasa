@@ -44,6 +44,11 @@ async function main() {
   console.log("Easings:", result.tokens.easings.length);
   console.log("LetterSpacing:", result.tokens.typography.letterSpacings.map((l) => l.raw));
   console.log("Scores:", result.pages[0]?.scores);
+  console.log("Components:", result.components.map((c) => `${c.name}(${c.confidence}%)x${c.count}`).slice(0, 8));
+  console.log("Health:", JSON.stringify(result.health && (result.health as { overall: number }).overall));
+  console.log("A11y AA:", result.accessibility && (result.accessibility as { wcagAA: { critical: number } }).wcagAA.critical);
+  const resp = result.responsive as { mobile: number; tablet: number; desktop: number; issues: unknown[] } | null;
+  console.log("Responsive:", resp ? `M${resp.mobile}/T${resp.tablet}/D${resp.desktop} issues=${resp.issues.length}` : "null");
 }
 
 main().catch((e) => {

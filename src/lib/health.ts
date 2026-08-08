@@ -120,16 +120,22 @@ export function computeHealth(m: DesignModel): HealthReport {
     });
   }
 
-  const componentConsistency = computeComponentConsistency();
+  const componentConsistency = computeComponentConsistency(m.components);
   const componentIssues = m.components.length === 0
     ? [{
         severity: "info" as const,
         category: "component",
-        message: "Deteksi komponen belum tersedia (mode Deep Scan).",
+        message: "Tidak ada pola komponen yang terdeteksi — cek apakah situs memakai class naming yang dikenali.",
         evidence: [],
         recommendation: "Jalankan Deep Scan untuk analisis komponen yang lebih baik.",
       }]
-    : [];
+    : m.components.filter((c) => c.confidence < 60).map((c) => ({
+        severity: "info" as const,
+        category: "component",
+        message: `Pola '${c.name}' punya konfidensi rendah (${c.confidence}%).`,
+        evidence: c.selectors.slice(0, 2),
+        recommendation: "Validasi manual apakah pola ini adalah komponen sungguhan.",
+      }));
 
   const overall = Math.round(
     colorConsistency * 0.3 +
@@ -194,6 +200,12 @@ export function computeHealth(m: DesignModel): HealthReport {
   };
 }
 
-function computeComponentConsistency(): number {
-  return 70;
+function computeComponentConsistency(
+  components: Array<{ confidence: number; count: number; variantCount: number }>,
+): number {
+  if (components.length === 0) return 70;
+  const avgConfidence =
+    components.reduce((sum, c) => sum + c.confidence, 0) / components.length;
+  const withReliability = components.filter((c) => c.confidence >= 60).length / components.length;
+  return Math.max(0, Math.min(100, Math.round(avgConfidence * 0.6 + withReliability * 100 * 0.4)));
 }

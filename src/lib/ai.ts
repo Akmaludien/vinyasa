@@ -211,23 +211,136 @@ export async function callAi(cfg: AiConfig, prompt: string, system?: string): Pr
   return singleCall(cfg, prompt, sys);
 }
 
-export async function callAiWithAutoSwitch(
+export async function streamAi(
   cfg: AiConfig,
   prompt: string,
+  onDelta: (chunk: string) => void,
   system?: string,
-  modelFallback?: string[],
+): Promise<void> {
+  const sys = system ?? "Kamu adalah asisten desain sistem yang ringkas dan akurat, merespons dalam Bahasa Indonesia.";
+  const ctrl = providerTimeout();
+
+  if (cfg.provider === "gemini") {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(cfg.apiKey)}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: sys }] },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      }),
+    });
+    if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+    const reader = res.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        const sse = line.trim();
+        if (!sse.startsWith("data:")) continue;
+        const payload = sse.slice(5).trim();
+        if (!payload) continue;
+        try {
+          const json = JSON.parse(payload);
+          const text = json.candidates?.[0]?.content?.parts
+            ?.map((p: { text?: string }) => p.text ?? "")
+            .join("");
+          if (text) onDelta(text);
+        } catch {
+          // skip partial
+        }
+      }
+    }
+    return;
+  }
+
+  const endpoint =
+    cfg.provider === "openai"
+      ? "https://api.openai.com/v1/chat/completions"
+      : cfg.provider === "claude"
+        ? "https://api.anthropic.com/v1/messages"
+        : cfg.baseUrl?.trim()
+          ? (cfg.baseUrl.includes("/chat/completions") ? cfg.baseUrl : `${cfg.baseUrl.replace(/\/$/, "")}/chat/completions`)
+          : "https://api.openai.com/v1/chat/completions";
+
+  const body =
+    cfg.provider === "claude"
+      ? JSON.stringify({ model: cfg.model, max_tokens: 4096, system: sys, messages: [{ role: "user", content: prompt }], stream: true })
+      : JSON.stringify({
+          model: cfg.model,
+          stream: true,
+          messages: [{ role: "system", content: sys }, { role: "user", content: prompt }],
+        });
+
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (cfg.provider === "claude") {
+    headers["x-api-key"] = cfg.apiKey;
+    headers["anthropic-version"] = "2023-06-01";
+  } else {
+    headers.authorization = `Bearer ${cfg.apiKey}`;
+  }
+
+  const res = await fetch(endpoint, { method: "POST", headers, signal: ctrl.signal, body });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error?.message ?? `AI error ${res.status}`);
+  }
+  const reader = res.body?.getReader();
+  if (!reader) return;
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split("\n");
+    buf = lines.pop() ?? "";
+    for (const line of lines) {
+      const sse = line.trim();
+      if (!sse.startsWith("data:")) continue;
+      const payload = sse.slice(5).trim();
+      if (payload === "[DONE]") return;
+      if (!payload) continue;
+      try {
+        const json = JSON.parse(payload);
+        if (cfg.provider === "claude") {
+          const text = json.delta?.text;
+          if (text) onDelta(text);
+        } else {
+          const text = json.choices?.[0]?.delta?.content ?? json.choices?.[0]?.message?.content;
+          if (text) onDelta(text);
+        }
+      } catch {
+        // skip partial
+      }
+    }
+  }
+}
+
+export async function streamAiWithAutoSwitch(
+  cfg: AiConfig,
+  prompt: string,
+  onDelta: (chunk: string) => void,
+  system?: string,
   onSwitch?: (from: string, to: string) => void,
-): Promise<string> {
-  const models = modelFallback?.length ? modelFallback : PROVIDERS.find((p) => p.id === cfg.provider)?.models ?? [];
+): Promise<void> {
+  const models = PROVIDERS.find((p) => p.id === cfg.provider)?.models ?? [];
   const candidates = [cfg.model, ...models.filter((m) => m !== cfg.model)];
   let lastError: AiError | null = null;
 
   for (const model of candidates) {
     const attempt: AiConfig = { ...cfg, model };
     try {
-      const out = await singleCall(attempt, prompt, system);
+      await streamAi(attempt, prompt, onDelta, system);
       if (model !== cfg.model) onSwitch?.(cfg.model, model);
-      return out;
+      return;
     } catch (e) {
       const err = e as AiError;
       lastError = err;
@@ -235,11 +348,10 @@ export async function callAiWithAutoSwitch(
     }
   }
   if (lastError) throw lastError;
-  return "";
 }
 
 export async function testConnection(cfg: AiConfig): Promise<void> {
-  const res = await callAiWithAutoSwitch(cfg, "Balas hanya satu kata: oke");
+  const res = await callAi(cfg, "Balas hanya satu kata: oke");
   if (!res.trim()) throw new Error("Tidak ada respons dari model");
 }
 
@@ -258,4 +370,59 @@ export function useAiConfig() {
       setCfg(null);
     },
   };
+}
+
+export type ModelContextSection =
+  | "tokens"
+  | "health"
+  | "accessibility"
+  | "responsive"
+  | "components"
+  | "darkmode";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildModelContext(m: any, sections?: ModelContextSection[]): string {
+  const wanted = new Set(sections ?? (["tokens", "health", "accessibility", "responsive", "components", "darkmode"] as ModelContextSection[]));
+  const t = m.tokens;
+  const lines: string[] = [];
+  lines.push(`URL: ${m.source.url}`);
+  lines.push(`Judul: ${m.source.title}`);
+
+  if (wanted.has("tokens")) {
+    lines.push(
+      `Warna primer: ${t.colors.primary.slice(0, 5).map((c: { name: string; hex: string; usage: number }) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
+    );
+    lines.push(
+      `Warna netral: ${t.colors.neutral.slice(0, 5).map((c: { name: string; hex: string; usage: number }) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
+    );
+    lines.push(`Font family: ${t.typography.families.slice(0, 4).map((f: { raw: string }) => f.raw).join(" | ")}`);
+    lines.push(`Ukuran font (px): ${t.typography.sizes.slice(0, 6).map((s: { px: number }) => s.px).join(", ")}`);
+    lines.push(`Spacing: ${t.spacing.slice(0, 8).map((s: { raw: string }) => s.raw).join(", ")}`);
+    lines.push(`Radius: ${t.radius.slice(0, 5).map((r: { raw: string }) => r.raw).join(", ")}`);
+    lines.push(`Breakpoints: ${t.breakpoints.map((b: { feature: string; raw: string }) => `${b.feature} ${b.raw}`).join(", ") || "tidak terdeteksi"}`);
+    lines.push(`Gradient: ${t.gradients.length} · Shadow: ${t.shadows.length} · Motion: ${t.durations.length}`);
+  }
+
+  if (wanted.has("health") && m.health) {
+    lines.push(`Design Health overall: ${m.health.overall}/100`);
+    if (m.health.spacing?.outliers?.length) {
+      lines.push(`Spacing outliers: ${m.health.spacing.outliers.join(", ")}`);
+    }
+  }
+  if (wanted.has("accessibility") && m.accessibility?.issues?.length) {
+    lines.push(`A11y issues: ${m.accessibility.issues.length}`);
+    for (const i of m.accessibility.issues.slice(0, 3)) {
+      lines.push(`  [${i.severity}] ${i.message}`);
+    }
+  }
+  if (wanted.has("responsive") && m.responsive) {
+    lines.push(`Responsive: M${m.responsive.mobile}/T${m.responsive.tablet}/D${m.responsive.desktop}`);
+  }
+  if (wanted.has("components") && m.components?.length) {
+    lines.push(`Komponen: ${m.components.map((c: { name: string; confidence: number }) => `${c.name}(${c.confidence}%)`).slice(0, 8).join(", ")}`);
+  }
+  if (wanted.has("darkmode") && m.darkMode) {
+    lines.push(`Dark mode: ${m.darkMode.detected ? "terdeteksi" : "tidak"}`);
+  }
+  return lines.join("\n");
 }

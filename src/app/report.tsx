@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
 import { buildDesignMd, buildDownloadFilename } from "@/lib/design-md";
 import { buildPreviewHtml } from "@/lib/preview";
-import { buildExports } from "@/lib/export";
-import { callAiWithAutoSwitch, loadConfig } from "@/lib/ai";
+import { buildExports, buildZip } from "@/lib/export";
+import { streamAiWithAutoSwitch, loadConfig, buildModelContext } from "@/lib/ai";
+import type { ModelContextSection } from "@/lib/ai";
 import { AiSettingsButton } from "@/components/AiSettings";
 import type { AiConfig } from "@/lib/ai";
 import type { HealthReport, HealthCategory } from "@/lib/health";
@@ -13,6 +14,9 @@ import type { A11yReport } from "@/lib/accessibility";
 import type { ResponsiveReport } from "@/lib/responsive";
 import { diffModels } from "@/lib/diff";
 import { playgroundFromModel, applyPlayground } from "@/lib/playground";
+import { listSessions, saveSession, deleteSession, renameSession, loadSession, clearAllSessions } from "@/lib/sessions";
+import type { ScanSession } from "@/lib/sessions";
+import { useI18n } from "@/lib/i18n";
 import type { DarkModeReport } from "@/lib/darkmode";
 
 const BASELINE_KEY = "vinyasa-baseline-scan";
@@ -42,6 +46,7 @@ type Tab =
   | "darkmode"
   | "playground"
   | "diff"
+  | "history"
   | "health"
   | "accessibility"
   | "export"
@@ -910,9 +915,29 @@ function ExportPanel({ result }: { result: DesignModel }) {
     URL.revokeObjectURL(url);
   }
 
+  function downloadZip() {
+    const { name, data } = buildZip(result);
+    const bytes = new Uint8Array(data);
+    const blob = new Blob([bytes], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <>
-      <SectionHeader title="Artefak design system" subtitle="Berdasarkan DesignModel, bukan output scraper mentah" />
+      <div className="mb-4 flex items-center justify-between">
+        <SectionHeader title="Artefak design system" subtitle="Berdasarkan DesignModel, bukan output scraper mentah" />
+        <button
+          onClick={downloadZip}
+          className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white"
+        >
+          Download semua (.zip)
+        </button>
+      </div>
       <div className="flex flex-col gap-2">
         {Object.entries(files).map(([key]) => (
           <div
@@ -941,6 +966,139 @@ function ExportPanel({ result }: { result: DesignModel }) {
   );
 }
 
+function HistoryPanel({
+  current,
+  onLoad,
+}: {
+  current: DesignModel;
+  onLoad: (m: DesignModel) => void;
+}) {
+  const [sessions, setSessions] = useState<ScanSession[]>(() => listSessions());
+  const [msg, setMsg] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  function flash(text: string) {
+    setMsg(text);
+    setTimeout(() => setMsg(""), 2500);
+  }
+
+  function refresh() {
+    setSessions(listSessions());
+  }
+
+  function handleSave() {
+    const s = saveSession(current);
+    flash(`Tersimpan: ${s.name}`);
+    refresh();
+  }
+
+  function handleDelete(id: string) {
+    deleteSession(id);
+    refresh();
+  }
+
+  function handleRename(id: string) {
+    renameSession(id, editingName.trim() || "untitled");
+    setEditingId(null);
+    refresh();
+  }
+
+  function handleLoad(id: string) {
+    const s = loadSession(id);
+    if (s) {
+      onLoad(s.model);
+      flash(`Dimuat: ${s.name}`);
+    }
+  }
+
+  return (
+    <>
+      <SectionHeader
+        title="Riwayat scan"
+        subtitle="Scan tersimpan di browser — fondasi untuk melacak perubahan (drift)"
+      />
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button
+          onClick={handleSave}
+          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+        >
+          Simpan scan ini
+        </button>
+        {sessions.length > 0 && (
+          <button
+            onClick={() => {
+              clearAllSessions();
+              refresh();
+              flash("Semua riwayat dihapus.");
+            }}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-500"
+          >
+            Hapus semua
+          </button>
+        )}
+      </div>
+      {msg && <p className="mb-3 text-xs text-emerald-400">{msg}</p>}
+
+      {sessions.length === 0 ? (
+        <p className="text-sm text-zinc-500">
+          Belum ada scan tersimpan. Tekan {"“Simpan scan ini”"} untuk menyimpan hasil saat ini.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {sessions.map((s) => (
+            <div key={s.id} className="rounded-xl border border-zinc-800 px-4 py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {editingId === s.id ? (
+                  <input
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRename(s.id);
+                    }}
+                    autoFocus
+                    className="w-48 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs outline-none focus:border-zinc-500"
+                  />
+                ) : (
+                  <div>
+                    <div className="text-sm font-medium">{s.name}</div>
+                    <div className="text-[11px] text-zinc-500">
+                      {s.url} · {new Date(s.createdAt).toLocaleString("id-ID")}
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => handleLoad(s.id)}
+                    className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-900 hover:bg-white"
+                  >
+                    Muat
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingId(s.id);
+                      setEditingName(s.name);
+                    }}
+                    className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                  >
+                    Rename
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    className="rounded-lg border border-red-900/40 px-2.5 py-1 text-xs text-red-400 hover:border-red-700"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 function AiPanel({
   result,
   config,
@@ -951,9 +1109,17 @@ function AiPanel({
   onChange: (c: AiConfig | null) => void;
 }) {
   const md = useMemo(() => buildDesignMd(result), [result]);
+  const [contextSections, setContextSections] = useState<ModelContextSection[]>([
+    "tokens",
+    "health",
+    "accessibility",
+    "responsive",
+    "components",
+    "darkmode",
+  ]);
   const modelContext = useMemo(
-    () => buildModelContext(result),
-    [result],
+    () => buildModelContext(result, contextSections),
+    [result, contextSections],
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -963,6 +1129,15 @@ function AiPanel({
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
   const [switchedNote, setSwitchedNote] = useState("");
 
+  const CONTEXT_OPTIONS: Array<{ id: ModelContextSection; label: string }> = [
+    { id: "tokens", label: "Token" },
+    { id: "health", label: "Health" },
+    { id: "accessibility", label: "A11y" },
+    { id: "responsive", label: "Responsif" },
+    { id: "components", label: "Komponen" },
+    { id: "darkmode", label: "Dark" },
+  ];
+
   function guard(): boolean {
     if (!config) {
       setError("Pasang API key AI dulu lewat tombol 'Atur AI' di atas.");
@@ -970,6 +1145,12 @@ function AiPanel({
     }
     setError("");
     return true;
+  }
+
+  function toggleSection(id: ModelContextSection) {
+    setContextSections((cur) =>
+      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
+    );
   }
 
   async function generate(mode: "readme" | "review") {
@@ -983,10 +1164,11 @@ function AiPanel({
         ? `Berikut hasil ekstraksi design system dari ${result.source.url}:\n\n${md}\n\nBuatkan README.md ringkas (Bahasa Indonesia) yang menjelaskan design system ini: palet warna, tipografi, radius, dan panduan pemakaiannya. Format markdown.`
         : `Berikut hasil ekstraksi design system dari ${result.source.url}:\n\n${md}\n\nBuat tinjauan desain (Bahasa Indonesia): kekuatan, kelemahan, dan saran perbaikan. Ringkas.`;
     try {
-      const out = await callAiWithAutoSwitch(cfg, prompt, undefined, undefined, (from, to) =>
-        setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`),
-      );
-      setOutput(out);
+      let acc = "";
+      await streamAiWithAutoSwitch(cfg, prompt, (chunk) => {
+        acc += chunk;
+        setOutput(acc);
+      }, undefined, (from, to) => setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menghubungi AI.");
     } finally {
@@ -1005,10 +1187,13 @@ function AiPanel({
     setSwitchedNote("");
     const prompt = `Konteks DesignModel Vinyasa untuk ${result.source.url}:\n${modelContext}\n\nPertanyaan: ${text}`;
     try {
-      const out = await callAiWithAutoSwitch(cfg, prompt, undefined, undefined, (from, to) =>
-        setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`),
-      );
-      setChatHistory((h) => [...h, { role: "ai", text: out }]);
+      let acc = "";
+      const msgId = chatHistory.length;
+      setChatHistory((h) => [...h, { role: "ai", text: "" }]);
+      await streamAiWithAutoSwitch(cfg, prompt, (chunk) => {
+        acc += chunk;
+        setChatHistory((h) => h.map((c, i) => (i === msgId + 1 ? { ...c, text: acc } : c)));
+      }, undefined, (from, to) => setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menghubungi AI.");
     } finally {
@@ -1045,6 +1230,32 @@ function AiPanel({
         </button>
         <AiSettingsButton config={config} onChange={onChange} />
       </div>
+
+      <div className="mb-4">
+        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">
+          Konteks AI yang disertakan
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {CONTEXT_OPTIONS.map((o) => {
+            const on = contextSections.includes(o.id);
+            return (
+              <button
+                key={o.id}
+                onClick={() => toggleSection(o.id)}
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                  on
+                    ? "border-zinc-400 bg-zinc-700 text-white"
+                    : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
+                }`}
+              >
+                {on ? "✓ " : ""}
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {switchedNote && <p className="mb-3 text-xs text-amber-400">{switchedNote}</p>}
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
@@ -1061,7 +1272,7 @@ function AiPanel({
           {chatHistory.map((c, i) => (
             <div key={i} className={`text-xs leading-5 ${c.role === "ai" ? "text-zinc-300" : "text-zinc-100"}`}>
               <span className="mr-1 font-semibold">{c.role === "ai" ? "AI" : "Kamu"}:</span>
-              <span className="whitespace-pre-wrap">{c.text}</span>
+              <span className="whitespace-pre-wrap">{c.text || (busy && i === chatHistory.length - 1 ? "…" : "")}</span>
             </div>
           ))}
         </div>
@@ -1080,7 +1291,7 @@ function AiPanel({
             disabled={busy || !chatInput.trim()}
             className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-50"
           >
-            Kirim
+            {busy ? "Mengetik…" : "Kirim"}
           </button>
         </div>
       </div>
@@ -1104,61 +1315,37 @@ function AiPanel({
   );
 }
 
-function buildModelContext(result: DesignModel): string {
-  const t = result.tokens;
-  const health = result.health as { overall?: number } | null;
-  const a11y = result.accessibility as { issues?: Array<{ severity: string; message: string }> } | null;
-  const lines: string[] = [];
-  lines.push(`URL: ${result.source.url}`);
-  lines.push(`Judul: ${result.source.title}`);
-  lines.push(
-    `Warna primer: ${t.colors.primary.slice(0, 5).map((c) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
-  );
-  lines.push(
-    `Warna netral: ${t.colors.neutral.slice(0, 5).map((c) => `${c.name}=${c.hex}(${c.usage}%)`).join(", ")}`,
-  );
-  lines.push(`Font family: ${t.typography.families.slice(0, 4).map((f) => f.raw).join(" | ")}`);
-  lines.push(
-    `Ukuran font (px): ${t.typography.sizes.slice(0, 6).map((s) => s.px).join(", ")}`,
-  );
-  lines.push(`Spacing: ${t.spacing.slice(0, 8).map((s) => s.raw).join(", ")}`);
-  lines.push(`Radius: ${t.radius.slice(0, 5).map((r) => r.raw).join(", ")}`);
-  lines.push(`Breakpoints: ${t.breakpoints.map((b) => `${b.feature} ${b.raw}`).join(", ") || "tidak terdeteksi"}`);
-  lines.push(`Gradient: ${t.gradients.length} · Shadow: ${t.shadows.length} · Motion: ${t.durations.length}`);
-  if (health?.overall !== undefined) lines.push(`Design Health overall: ${health.overall}/100`);
-  if (a11y?.issues?.length) {
-    lines.push(`A11y issues: ${a11y.issues.length} (${a11y.issues[0].severity})`);
-  }
-  return lines.join("\n");
-}
-
 export function FullReport({ response }: { response: ExtractResponse }) {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("colors");
   const [activeIndex, setActiveIndex] = useState(0);
   const [aiConfig, setAiConfig] = useState<AiConfig | null>(() => loadConfig());
+  const [loaded, setLoaded] = useState<DesignModel | null>(null);
   const results = response.results;
-  const result = results[activeIndex];
+  const baseResult = results[activeIndex];
+  const result = loaded ?? baseResult;
 
   if (!result) return null;
 
   const tabs: Array<{ id: Tab; label: string }> = [
-    { id: "colors", label: "Warna" },
-    { id: "typography", label: "Tipografi" },
-    { id: "spacing", label: "Spacing" },
-    { id: "shapes", label: "Shapes" },
-    { id: "effects", label: "Efek" },
-    { id: "components", label: "Komponen" },
-    { id: "responsive", label: "Responsif" },
-    { id: "darkmode", label: "Dark Mode" },
-    { id: "playground", label: "Playground" },
-    { id: "diff", label: "Diff" },
-    { id: "health", label: "Health" },
-    { id: "accessibility", label: "Aksesibilitas" },
-    { id: "export", label: "Export" },
-    { id: "audit", label: "Audit" },
-    { id: "md", label: "DESIGN.md" },
-    { id: "preview", label: "Preview" },
-    { id: "ai", label: "AI" },
+    { id: "colors", label: t("tab.colors") },
+    { id: "typography", label: t("tab.typography") },
+    { id: "spacing", label: t("tab.spacing") },
+    { id: "shapes", label: t("tab.shapes") },
+    { id: "effects", label: t("tab.effects") },
+    { id: "components", label: t("tab.components") },
+    { id: "responsive", label: t("tab.responsive") },
+    { id: "darkmode", label: t("tab.darkmode") },
+    { id: "playground", label: t("tab.playground") },
+    { id: "diff", label: t("tab.diff") },
+    { id: "history", label: t("tab.history") },
+    { id: "health", label: t("tab.health") },
+    { id: "accessibility", label: t("tab.accessibility") },
+    { id: "export", label: t("tab.export") },
+    { id: "audit", label: t("tab.audit") },
+    { id: "md", label: t("tab.md") },
+    { id: "preview", label: t("tab.preview") },
+    { id: "ai", label: t("tab.ai") },
   ];
 
   return (
@@ -1240,6 +1427,7 @@ export function FullReport({ response }: { response: ExtractResponse }) {
         {tab === "darkmode" && <DarkModePanel result={result} />}
         {tab === "playground" && <PlaygroundPanel result={result} />}
         {tab === "diff" && <DiffPanel result={result} />}
+        {tab === "history" && <HistoryPanel current={result} onLoad={setLoaded} />}
         {tab === "health" && <HealthPanel result={result} />}
         {tab === "accessibility" && <A11yPanel result={result} />}
         {tab === "export" && <ExportPanel result={result} />}

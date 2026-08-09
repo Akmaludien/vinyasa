@@ -1,3 +1,4 @@
+import { zipSync, strToU8 } from "fflate";
 import type { DesignModel } from "./model";
 
 export type ExportFormat = "tokens.json" | "tokens.css" | "tailwind.css" | "design.md" | "raw.json" | "readme.md";
@@ -187,6 +188,25 @@ function designMdForExport(m: DesignModel): string {
   }
   lines.push(`Token diekstrak otomatis oleh Vinyasa dari CSS yang dimuat halaman.`);
   return lines.join("\n");
+}
+
+export function buildDownloadFolder(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "").replace(/[^a-z0-9.-]/gi, "_");
+    return `vinyasa-${host}`;
+  } catch {
+    return "vinyasa-design";
+  }
+}
+
+export function buildZip(m: DesignModel): { name: string; data: Uint8Array } {
+  const files = buildExports(m).files;
+  const folder = buildDownloadFolder(m.source.url);
+  const entries: Record<string, Uint8Array> = {};
+  for (const [name, content] of Object.entries(files)) {
+    entries[`${folder}/${name}`] = strToU8(content);
+  }
+  return { name: `${folder}.zip`, data: zipSync(entries, { level: 6 }) };
 }
 
 export { hexToRgba };

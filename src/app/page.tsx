@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ExtractResponse, ScanMode, ScanScopeKind } from "@/lib/model";
 import { FullReport } from "./report";
+import { useI18n, LangToggle } from "@/lib/i18n";
 
 const SUGGESTIONS = [
   "https://apple.com",
@@ -21,6 +22,7 @@ const SCOPE_OPTIONS: Array<{ id: ScanScopeKind; label: string; hint: string }> =
 ];
 
 export default function HomePage() {
+  const { t } = useI18n();
   const [urls, setUrls] = useState("");
   const [scope, setScope] = useState<ScanScopeKind>("smart");
   const [mode, setMode] = useState<ScanMode>("fast");
@@ -39,7 +41,7 @@ export default function HomePage() {
   async function handleExtract() {
     const list = parseUrls();
     if (list.length === 0) {
-      setError("Masukkan satu atau lebih URL terlebih dahulu.");
+      setError(t("scan.error.empty"));
       return;
     }
     setError("");
@@ -58,7 +60,7 @@ export default function HomePage() {
       const data: ExtractResponse = await res.json();
       setResponse(data);
     } catch {
-      setError("Terjadi kesalahan jaringan.");
+      setError(t("scan.error.network"));
     } finally {
       setLoading(false);
     }
@@ -66,16 +68,18 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 pb-24 pt-14">
+      <div className="flex items-center justify-end">
+        <LangToggle />
+      </div>
       <section className="text-center">
         <p className="mb-3 inline-block rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300">
-          Vinyasa · Design Intelligence
+          {t("app.tagline")}
         </p>
         <h1 className="text-4xl font-bold tracking-tight">
-          Pindai website jadi design system yang dipahami
+          {t("hero.title")}
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-zinc-400">
-          Tempel URL, pilih cakupan pemindaian. Vinyasa mengekstrak design token, menilai
-          kesehatan dirancang, dan mengekspor artefak yang siap dipakai developer.
+          {t("hero.subtitle")}
         </p>
       </section>
 
@@ -87,12 +91,12 @@ export default function HomePage() {
             if (error) setError("");
           }}
           rows={1}
-          placeholder="https://example.com  (pisahkan lebih dari satu URL dengan koma atau baris baru)"
+          placeholder={t("scan.placeholder")}
           className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none placeholder:text-zinc-500 focus:border-zinc-500"
         />
 
         <div className="mt-4">
-          <div className="mb-2 text-xs text-zinc-500">Cakupan scan</div>
+          <div className="mb-2 text-xs text-zinc-500">{t("scan.scope")}</div>
           <div className="flex flex-wrap gap-2">
             {SCOPE_OPTIONS.map((o) => (
               <button
@@ -115,7 +119,7 @@ export default function HomePage() {
 
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Mode:</span>
+            <span className="text-xs text-zinc-500">{t("scan.mode")}</span>
             <div className="inline-flex rounded-lg border border-zinc-700 p-0.5">
               {(["fast", "deep"] as ScanMode[]).map((m) => (
                 <button
@@ -132,7 +136,7 @@ export default function HomePage() {
           </div>
           {(scope === "custom" || scope === "all") && (
             <label className="flex items-center gap-2 text-xs text-zinc-500">
-              Maks halaman
+              {t("scan.max")}
               <input
                 type="number"
                 min={1}
@@ -148,12 +152,12 @@ export default function HomePage() {
             disabled={loading}
             className="ml-auto rounded-xl bg-zinc-100 px-5 py-2.5 text-sm font-semibold text-zinc-900 transition-colors hover:bg-white disabled:opacity-60"
           >
-            {loading ? "Memindai…" : "Mulai Scan"}
+            {loading ? t("scan.loading") : t("scan.start")}
           </button>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-          <span>Coba:</span>
+          <span>{t("scan.try")}</span>
           {SUGGESTIONS.map((s) => (
             <button
               key={s}

@@ -41,13 +41,17 @@ Website → Discovery → Extraction → Normalization → Canonical Design Mode
 
 **Playground** — ubah warna & radius token, pratinjau langsung, reset, salin modifikasi (layer terpisah dari data asli).
 
+**i18n** — toggle Bahasa Indonesia / English.
+
 **Diff** — bandingkan baseline vs scan saat ini: ditambah/dihapus/berubah per kategori token.
+
+**Riwayat scan (Session)** — simpan/muat/rename/hapus scan di localStorage (fondasi Design Drift).
 
 **Deep Scan** — Playwright headless browser: render halaman, computed styles, warna runtime, screenshot.
 
-**Export Engine** — satu aksi menghasilkan: `tokens.json` (DTCG-compatible), `tokens.css`, `tailwind.css`, `DESIGN.md`, `raw.json`, `README.md`, bisa salin/download per file.
+**Export Engine** — satu aksi menghasilkan: `tokens.json` (DTCG-compatible), `tokens.css`, `tailwind.css`, `DESIGN.md`, `raw.json`, `README.md`, plus **unduh semua sebagai ZIP**.
 
-**AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review, **AI Chat grounded di DesignModel**, test connection, **auto-switch model saat 429** (transparan).
+**AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review, **AI Chat streaming (SSE) grounded di DesignModel**, **konteks selektif per bagian**, test connection, auto-switch model saat 429 (transparan).
 
 ## Tech stack
 

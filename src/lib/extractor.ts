@@ -19,6 +19,7 @@ import { computeHealth } from "./health";
 import { computeAccessibility } from "./accessibility";
 import { detectComponents } from "./components";
 import { computeResponsive } from "./responsive";
+import { detectDarkMode } from "./darkmode";
 import { DESIGN_MODEL_SCHEMA_VERSION, TOOL_NAME, TOOL_VERSION } from "./model";
 import type {
   AnalysisScores,
@@ -714,6 +715,7 @@ export function extractDesignSystem(
     health: null,
     accessibility: null,
     responsive: null,
+    darkMode: null,
     components: [],
   } as DesignModel;
 
@@ -722,6 +724,7 @@ export function extractDesignSystem(
     health: computeHealth(baseResult),
     accessibility: computeAccessibility(baseResult),
     responsive: computeResponsive(baseResult),
+    darkMode: detectDarkMode(sources),
     components: detectComponents(sources, pageUrl).components,
   };
 }

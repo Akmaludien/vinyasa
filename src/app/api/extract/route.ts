@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPageDocs, hydrateSources, isSafeUrl } from "@/lib/fetcher";
 import { extractDesignSystem } from "@/lib/extractor";
+import { deepScanStyles } from "@/lib/deepscan";
 import type { DesignModel, ExtractResponse, ScanScopeRequest } from "@/lib/model";
 import { parseScanScope, discoverUrls } from "@/lib/scan";
 
@@ -55,13 +56,25 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const { title, sources } = await fetchPageDocs(url);
-      const hydrated = await hydrateSources(sources);
-      if (hydrated.length === 0) {
-        errors.push({ url, message: "Tidak ada stylesheet yang bisa dibaca di halaman tersebut" });
-        continue;
+      let hydrated;
+      let pageTitle = url;
+      if (body.mode === "deep") {
+        hydrated = await deepScanStyles(url);
+        if (hydrated.length === 0) {
+          errors.push({ url, message: "Deep scan tidak menghasilkan stylesheet (browser mungkin belum terinstal)." });
+          continue;
+        }
+        pageTitle = `Deep: ${url}`;
+      } else {
+        const { title, sources } = await fetchPageDocs(url);
+        hydrated = await hydrateSources(sources);
+        if (hydrated.length === 0) {
+          errors.push({ url, message: "Tidak ada stylesheet yang bisa dibaca di halaman tersebut" });
+          continue;
+        }
+        pageTitle = title;
       }
-      const result = extractDesignSystem(hydrated, url, title, {
+      const result = extractDesignSystem(hydrated, url, pageTitle, {
         mode: body.mode ?? "fast",
         scope,
       });

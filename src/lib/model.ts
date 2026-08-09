@@ -6,6 +6,7 @@ import type { ComponentReport } from "./components";
 import type { HealthReport } from "./health";
 import type { A11yReport } from "./accessibility";
 import type { ResponsiveReport } from "./responsive";
+import type { DarkModeReport } from "./darkmode";
 
 export type ScanMode = "fast" | "deep";
 export type ScanScopeKind = "smart" | "landing" | "pages" | "all" | "custom";
@@ -245,6 +246,7 @@ export interface DesignModel {
   health: HealthReport | null;
   accessibility: A11yReport | null;
   responsive: ResponsiveReport | null;
+  darkMode: DarkModeReport | null;
   components: ComponentReport["components"];
 }
 

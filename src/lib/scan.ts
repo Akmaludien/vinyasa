@@ -44,7 +44,7 @@ export function parseScanScope(
     urls = urls.slice(0, maxUrls);
   }
 
-  return { kind, maxPages: maxUrls, urls, maxUrls, discovered: [] };
+  return { kind, maxPages: maxUrls, urls: urls.slice(0, maxUrls), maxUrls, discovered: [] };
 }
 
 function isUrlSafe(u: string): boolean {

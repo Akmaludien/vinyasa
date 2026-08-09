@@ -33,6 +33,18 @@ Website → Discovery → Extraction → Normalization → Canonical Design Mode
 
 **Accessibility / WCAG** — kontras fg/bg, AA & AAA, isu berperingkat (critical/warning/suggestion), label sebagai analisis otomatis (bukan sertifikasi).
 
+**Responsive Intelligence** — skor Mobile/Tablet/Desktop, analisis breakpoints & ukuran font, isu per viewport.
+
+**Dark Mode Intelligence** — deteksi `prefers-color-scheme`, class `.dark`, `[data-theme]`, dan variabel tema.
+
+**Component Detection** — heuristik selector untuk 20+ pola (button, card, navbar, modal, dll.) dengan confidence & properti.
+
+**Playground** — ubah warna & radius token, pratinjau langsung, reset, salin modifikasi (layer terpisah dari data asli).
+
+**Diff** — bandingkan baseline vs scan saat ini: ditambah/dihapus/berubah per kategori token.
+
+**Deep Scan** — Playwright headless browser: render halaman, computed styles, warna runtime, screenshot.
+
 **Export Engine** — satu aksi menghasilkan: `tokens.json` (DTCG-compatible), `tokens.css`, `tailwind.css`, `DESIGN.md`, `raw.json`, `README.md`, bisa salin/download per file.
 
 **AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review, **AI Chat grounded di DesignModel**, test connection, **auto-switch model saat 429** (transparan).
@@ -51,6 +63,18 @@ npm run dev
 ```
 
 Buka `http://localhost:3000`, tempel URL, pilih cakupan & mode, tekan **Mulai Scan**.
+
+Untuk Deep Scan, pastikan browser headless terinstal:
+```bash
+npx playwright install chromium
+```
+
+Test & verifikasi:
+```bash
+npm test          # vitest (38 unit test)
+npm run lint      # eslint
+npm run build     # production build
+```
 
 ## Struktur
 
@@ -96,8 +120,12 @@ src/
 | 5. Design Health | ✅ |
 | 6. Accessibility/WCAG | ✅ |
 | 7. Responsive Intelligence | ✅ (CSS-heuristic; visual via Deep Scan) |
-| 8. Deep Scan (Playwright) | roadmap |
+| 8. Deep Scan (Playwright) | ✅ computed styles + screenshot |
 | 9. Component detection | ✅ (heuristik selector) |
 | 10. AI (Custom provider, chat) | ✅ |
+| 11. Playground | ✅ |
+| 12. Diff | ✅ (baseline vs sekarang) |
+| 13. Dark Mode / Drift | ✅ dark mode; drift = roadmap |
+| 14. Hardening | ✅ SSRF, limits, 38 test, lint/build |
 | 11–13. Playground / Diff / Drift | roadmap |
 | 14. Hardening | di tiap fase |

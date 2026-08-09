@@ -42,10 +42,6 @@ export default function HomePage() {
       setError("Masukkan satu atau lebih URL terlebih dahulu.");
       return;
     }
-    if (mode === "deep") {
-      setError("Deep scan belum tersedia — mulai dengan Fast scan.");
-      return;
-    }
     setError("");
     setLoading(true);
     setResponse(null);

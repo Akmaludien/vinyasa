@@ -48,19 +48,18 @@ function textSizeClass(px: number | null): "large" | "small" {
 
 export function computeAccessibility(m: DesignModel): A11yReport {
   const issues: A11yIssue[] = [];
-  const colors = [...m.tokens.colors.primary, ...m.tokens.colors.neutral];
+  const all = [...m.tokens.colors.primary, ...m.tokens.colors.neutral];
   const allTokens: Array<ColorToken & { rgb: Rgb }> = [];
-  for (const c of colors) {
+  for (const c of all) {
     const rgb = hexToRgb(c.hex);
     if (rgb) allTokens.push({ ...c, rgb });
   }
 
-  let textColor: Rgb | null = null;
-  const neutral = m.tokens.colors.neutral;
-  if (neutral.length > 1) {
-    const sorted = [...neutral].sort((a, b) => b.usage - a.usage);
-    textColor = hexToRgb(sorted.find((c) => c.hex !== m.tokens.colors.neutral[0]?.hex)?.hex ?? neutral[0].hex) ?? null;
-  }
+  const sortedByUsage = [...allTokens].sort((a, b) => b.usage - a.usage);
+  const textColor = sortedByUsage[0]?.rgb ?? null;
+  const distinctBgs =
+    allTokens.filter((t) => t.hex !== toTokenHex(textColor)) || [];
+  const bgs = distinctBgs.length > 0 ? distinctBgs : allTokens.slice(0, 1);
 
   let aaCritical = 0;
   let aaWarning = 0;
@@ -73,8 +72,7 @@ export function computeAccessibility(m: DesignModel): A11yReport {
   const sizeClass = textSizeClass(size);
 
   if (textColor) {
-    for (const bg of allTokens) {
-      if (bg.hex === toTokenHex(textColor)) continue;
+    for (const bg of bgs) {
       const ratio = contrastRatio(textColor, bg.rgb);
       const aa = sizeClass === "large" ? 3 : 4.5;
       const aaa = sizeClass === "large" ? 4.5 : 7;

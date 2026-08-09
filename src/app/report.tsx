@@ -11,6 +11,25 @@ import type { AiConfig } from "@/lib/ai";
 import type { HealthReport, HealthCategory } from "@/lib/health";
 import type { A11yReport } from "@/lib/accessibility";
 import type { ResponsiveReport } from "@/lib/responsive";
+import { diffModels } from "@/lib/diff";
+import { playgroundFromModel, applyPlayground } from "@/lib/playground";
+import type { DarkModeReport } from "@/lib/darkmode";
+
+const BASELINE_KEY = "vinyasa-baseline-scan";
+
+function loadBaseline(): DesignModel | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BASELINE_KEY);
+    return raw ? (JSON.parse(raw) as DesignModel) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveBaseline(m: DesignModel) {
+  localStorage.setItem(BASELINE_KEY, JSON.stringify(m));
+}
 
 type Tab =
   | "colors"
@@ -20,6 +39,9 @@ type Tab =
   | "effects"
   | "components"
   | "responsive"
+  | "darkmode"
+  | "playground"
+  | "diff"
   | "health"
   | "accessibility"
   | "export"
@@ -555,6 +577,238 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
   );
 }
 
+function PlaygroundPanel({ result }: { result: DesignModel }) {
+  const initial = useMemo(() => playgroundFromModel(result), [result]);
+  const [colors, setColors] = useState<Record<string, string>>(() => initial.colors);
+  const [radius, setRadius] = useState<Record<string, string>>(() => initial.radius);
+  const [copied, setCopied] = useState(false);
+
+  const modified: DesignModel = useMemo(
+    () => applyPlayground(result, { colors, radius }),
+    [result, colors, radius],
+  );
+
+  const changedCount =
+    Object.entries(colors).filter(([k, v]) => k !== v).length +
+    Object.entries(radius).filter(([k, v]) => k !== v).length;
+
+  async function copyTokens() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify({ colors, radius }, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  }
+
+  function reset() {
+    setColors(initial.colors);
+    setRadius(initial.radius);
+  }
+
+  return (
+    <>
+      <SectionHeader
+        title="Playground"
+        subtitle="Ubah token (layer modifikasi) — data asli yang diekstrak tidak disentuh"
+      />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={reset}
+          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+        >
+          Reset
+        </button>
+        <button
+          onClick={copyTokens}
+          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+        >
+          {copied ? "Tersalin!" : "Salin modifikasi (JSON)"}
+        </button>
+        {changedCount > 0 && (
+          <span className="rounded-full bg-amber-950 px-2.5 py-1 text-xs text-amber-300">
+            {changedCount} token diubah
+          </span>
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <div className="mb-2 text-xs text-zinc-500">Edit warna</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {Object.entries(colors).map(([orig, val]) => (
+              <label key={orig} className="rounded-xl border border-zinc-800 p-2">
+                <input
+                  type="color"
+                  value={val}
+                  onChange={(e) => setColors((c) => ({ ...c, [orig]: e.target.value }))}
+                  className="h-9 w-full cursor-pointer rounded-md border-0 bg-transparent"
+                />
+                <div className="mt-1 truncate font-mono text-[10px] text-zinc-500">{orig}</div>
+                <div className="truncate font-mono text-[10px] text-zinc-400">{val}</div>
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-4 mb-2 text-xs text-zinc-500">Edit radius</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {Object.entries(radius).map(([orig, val]) => (
+              <label key={orig} className="rounded-xl border border-zinc-800 p-2">
+                <input
+                  type="text"
+                  value={val}
+                  onChange={(e) => setRadius((r) => ({ ...r, [orig]: e.target.value }))}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 font-mono text-xs outline-none focus:border-zinc-500"
+                />
+                <div className="mt-1 truncate font-mono text-[10px] text-zinc-500">{orig}</div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2 text-xs text-zinc-500">Preview modifikasi</div>
+          <PreviewPanel result={modified} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DarkModePanel({ result }: { result: DesignModel }) {
+  const d = result.darkMode as DarkModeReport | null;
+  if (!d) return <p className="text-sm text-zinc-500">Belum dianalisis.</p>;
+  return (
+    <>
+      <div
+        className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${
+          d.detected
+            ? "border-emerald-800 bg-emerald-950/40 text-emerald-300"
+            : "border-zinc-700 text-zinc-400"
+        }`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${d.detected ? "bg-emerald-400" : "bg-zinc-600"}`} />
+        {d.detected ? "Dark mode terdeteksi" : "Dark mode tidak terdeteksi"}
+      </div>
+      <div className="flex flex-col gap-2 text-sm">
+        <div>Media query <code>prefers-color-scheme</code>: {d.prefersColorScheme ? "ada" : "tidak ada"}</div>
+        <div>Class/tema dark: {d.mediaQuery ? "ada" : "tidak ada"}</div>
+        {d.themeVariables.length > 0 && (
+          <div>
+            <div className="mb-1 text-xs text-zinc-500">Variabel tema:</div>
+            <div className="flex flex-wrap gap-1">
+              {d.themeVariables.slice(0, 10).map((v) => (
+                <code key={v} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px]">
+                  {v}
+                </code>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <p className="mt-3 text-[11px] text-zinc-600">{d.note}</p>
+    </>
+  );
+}
+
+function DiffPanel({ result }: { result: DesignModel }) {
+  const [baseline, setBaseline] = useState<DesignModel | null>(() => loadBaseline());
+  const [savedMsg, setSavedMsg] = useState("");
+  const diff = useMemo(() => diffModels(baseline, result), [baseline, result]);
+
+  function saveAsBaseline() {
+    saveBaseline(result);
+    setBaseline(result);
+    setSavedMsg("Scan saat ini disimpan sebagai baseline.");
+    setTimeout(() => setSavedMsg(""), 2500);
+  }
+
+  function clearBaseline() {
+    localStorage.removeItem(BASELINE_KEY);
+    setBaseline(null);
+    setSavedMsg("Baseline dihapus.");
+    setTimeout(() => setSavedMsg(""), 2500);
+  }
+
+  return (
+    <>
+      <SectionHeader
+        title="Perbandingan design system"
+        subtitle="Diff antara baseline tersimpan dan scan saat ini"
+      />
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          onClick={saveAsBaseline}
+          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+        >
+          Simpan scan ini sebagai baseline
+        </button>
+        {baseline && (
+          <button
+            onClick={clearBaseline}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-500"
+          >
+            Hapus baseline
+          </button>
+        )}
+      </div>
+      {savedMsg && <p className="mb-3 text-xs text-emerald-400">{savedMsg}</p>}
+
+      {baseline ? (
+        diff ? (
+          <>
+            <div className="mb-3 flex flex-wrap gap-2 text-xs text-zinc-500">
+              <span className="rounded-full border border-zinc-700 px-2.5 py-1">Baseline: {diff.a}</span>
+              <span className="rounded-full border border-zinc-700 px-2.5 py-1">Sekarang: {diff.b}</span>
+            </div>
+            <div className="mb-3 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-emerald-300">+{diff.summary.added} ditambah</span>
+              <span className="rounded-full bg-red-950 px-2.5 py-1 text-red-300">-{diff.summary.removed} dihapus</span>
+              <span className="rounded-full bg-amber-950 px-2.5 py-1 text-amber-300">~{diff.summary.changed} berubah</span>
+            </div>
+            <div className="flex flex-col gap-3">
+              {diff.groups.map((g) => {
+                const isEmpty = g.added.length === 0 && g.removed.length === 0 && g.changed.length === 0;
+                if (isEmpty) return null;
+                return (
+                  <div key={g.category} className="rounded-xl border border-zinc-800 p-4">
+                    <div className="mb-2 text-sm font-semibold capitalize">{g.category}</div>
+                    {g.added.length > 0 && (
+                      <div className="mb-1 text-xs text-emerald-400">
+                        {g.added.map((a) => `${a.label}: ${a.value}`).join(" · ")}
+                      </div>
+                    )}
+                    {g.removed.length > 0 && (
+                      <div className="mb-1 text-xs text-red-400">
+                        {g.removed.map((a) => `${a.label}: ${a.value}`).join(" · ")}
+                      </div>
+                    )}
+                    {g.changed.length > 0 && (
+                      <div className="text-xs text-amber-400">
+                        {g.changed.map((c) => `${c.label}: ${c.before} → ${c.after}`).join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {diff.summary.added + diff.summary.removed + diff.summary.changed === 0 && (
+                <p className="text-sm text-zinc-500">Tidak ada perbedaan yang terdeteksi.</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-zinc-500">Belum ada baseline.</p>
+        )
+      ) : (
+        <p className="text-sm text-zinc-500">
+          Belum ada baseline. Jalankan scan, lalu simpan sebagai baseline untuk membandingkan perubahan design system.
+        </p>
+      )}
+    </>
+  );
+}
+
 function HealthPanel({ result }: { result: DesignModel }) {
   const health = result.health as HealthReport | null;
   if (!health) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
@@ -895,6 +1149,9 @@ export function FullReport({ response }: { response: ExtractResponse }) {
     { id: "effects", label: "Efek" },
     { id: "components", label: "Komponen" },
     { id: "responsive", label: "Responsif" },
+    { id: "darkmode", label: "Dark Mode" },
+    { id: "playground", label: "Playground" },
+    { id: "diff", label: "Diff" },
     { id: "health", label: "Health" },
     { id: "accessibility", label: "Aksesibilitas" },
     { id: "export", label: "Export" },
@@ -980,6 +1237,9 @@ export function FullReport({ response }: { response: ExtractResponse }) {
         {tab === "effects" && <EffectsPanel result={result} />}
         {tab === "components" && <ComponentsPanel result={result} />}
         {tab === "responsive" && <ResponsivePanel result={result} />}
+        {tab === "darkmode" && <DarkModePanel result={result} />}
+        {tab === "playground" && <PlaygroundPanel result={result} />}
+        {tab === "diff" && <DiffPanel result={result} />}
         {tab === "health" && <HealthPanel result={result} />}
         {tab === "accessibility" && <A11yPanel result={result} />}
         {tab === "export" && <ExportPanel result={result} />}

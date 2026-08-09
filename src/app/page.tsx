@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ExtractResponse, ScanMode, ScanScopeKind } from "@/lib/model";
 import { FullReport } from "./report";
 import { useI18n, LangToggle } from "@/lib/i18n";
@@ -33,7 +33,12 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [response, setResponse] = useState<ExtractResponse | null>(null);
-  const [aiConfig, setAiConfig] = useState<AiConfig | null>(() => loadConfig());
+  const [aiConfig, setAiConfig] = useState<AiConfig | null>(null);
+
+  useEffect(() => {
+    const c = loadConfig();
+    if (c) setAiConfig(c);
+  }, []);
 
   function handleAiConfigChange(c: AiConfig | null) {
     setAiConfig(c);

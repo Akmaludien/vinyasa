@@ -1,5 +1,6 @@
 import { zipSync, strToU8 } from "fflate";
 import type { DesignModel } from "./model";
+import { buildDesignMd, type MdOptions } from "./design-md";
 
 export type ExportFormat = "tokens.json" | "tokens.css" | "tailwind.css" | "design.md" | "raw.json" | "readme.md";
 
@@ -19,12 +20,12 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function buildExports(m: DesignModel): ExportSet {
+export function buildExports(m: DesignModel, mdOpts?: MdOptions): ExportSet {
   const files: Record<string, string> = {};
   files["tokens.json"] = buildTokensJson(m);
   files["tokens.css"] = buildTokensCss(m);
   files["tailwind.css"] = buildTailwindCss(m);
-  files["DESIGN.md"] = designMdForExport(m);
+  files["DESIGN.md"] = designMdForExport(m, mdOpts);
   files["raw.json"] = JSON.stringify(m, null, 2);
   return { files };
 }
@@ -171,23 +172,8 @@ function buildTailwindCss(m: DesignModel): string {
   return lines.join("\n");
 }
 
-function designMdForExport(m: DesignModel): string {
-  const lines: string[] = [];
-  lines.push(`# Design System — ${m.source.title}`);
-  lines.push("");
-  lines.push(`Sumber: ${m.source.url}`);
-  lines.push("");
-  const scores = m.pages[0]?.scores;
-  if (scores) {
-    lines.push(`## Skor akurasi`);
-    lines.push("");
-    lines.push(`- Warna: ${scores.color}/100`);
-    lines.push(`- Tipografi: ${scores.typography}/100`);
-    lines.push(`- Radius: ${scores.radius}/100`);
-    lines.push("");
-  }
-  lines.push(`Token diekstrak otomatis oleh Vinyasa dari CSS yang dimuat halaman.`);
-  return lines.join("\n");
+function designMdForExport(m: DesignModel, mdOpts?: MdOptions): string {
+  return buildDesignMd(m, mdOpts);
 }
 
 export function buildDownloadFolder(url: string): string {
@@ -199,8 +185,8 @@ export function buildDownloadFolder(url: string): string {
   }
 }
 
-export function buildZip(m: DesignModel): { name: string; data: Uint8Array } {
-  const files = buildExports(m).files;
+export function buildZip(m: DesignModel, mdOpts?: MdOptions): { name: string; data: Uint8Array } {
+  const files = buildExports(m, mdOpts).files;
   const folder = buildDownloadFolder(m.source.url);
   const entries: Record<string, Uint8Array> = {};
   for (const [name, content] of Object.entries(files)) {

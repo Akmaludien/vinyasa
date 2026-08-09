@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { ExtractResponse, ScanMode, ScanScopeKind } from "@/lib/model";
 import { FullReport } from "./report";
 import { useI18n, LangToggle } from "@/lib/i18n";
+import { AiSettingsButton } from "@/components/AiSettings";
+import type { AiConfig } from "@/lib/ai";
+import { loadConfig, saveConfig } from "@/lib/ai";
 
 const SUGGESTIONS = [
   "https://apple.com",
@@ -30,6 +33,12 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [response, setResponse] = useState<ExtractResponse | null>(null);
+  const [aiConfig, setAiConfig] = useState<AiConfig | null>(() => loadConfig());
+
+  function handleAiConfigChange(c: AiConfig | null) {
+    setAiConfig(c);
+    if (c) saveConfig(c);
+  }
 
   function parseUrls(): string[] {
     return urls
@@ -68,7 +77,8 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 pb-24 pt-14">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <AiSettingsButton config={aiConfig} onChange={handleAiConfigChange} />
         <LangToggle />
       </div>
       <section className="text-center">
@@ -187,7 +197,13 @@ export default function HomePage() {
         </section>
       )}
 
-      {response && response.results.length > 0 && <FullReport response={response} />}
+      {response && response.results.length > 0 && (
+        <FullReport
+          response={response}
+          initialAiConfig={aiConfig}
+          onAiConfigChange={handleAiConfigChange}
+        />
+      )}
     </main>
   );
 }

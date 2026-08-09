@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
-import { buildDesignMd, buildDownloadFilename } from "@/lib/design-md";
+import { buildDesignMd, buildDownloadFilename, type MdOptions, type MdLang } from "@/lib/design-md";
 import { buildPreviewHtml } from "@/lib/preview";
 import { buildExports, buildZip } from "@/lib/export";
 import { streamAiWithAutoSwitch, loadConfig, buildModelContext } from "@/lib/ai";
@@ -12,7 +12,7 @@ import type { AiConfig } from "@/lib/ai";
 import type { HealthReport, HealthCategory } from "@/lib/health";
 import type { A11yReport } from "@/lib/accessibility";
 import type { ResponsiveReport } from "@/lib/responsive";
-import { diffModels } from "@/lib/diff";
+import { diffModels, type DiffResult } from "@/lib/diff";
 import { playgroundFromModel, applyPlayground } from "@/lib/playground";
 import { listSessions, saveSession, deleteSession, renameSession, loadSession, clearAllSessions } from "@/lib/sessions";
 import type { ScanSession } from "@/lib/sessions";
@@ -47,6 +47,7 @@ type Tab =
   | "playground"
   | "diff"
   | "history"
+  | "drift"
   | "health"
   | "accessibility"
   | "export"
@@ -386,8 +387,83 @@ function AuditPanel({ result }: { result: DesignModel }) {
   );
 }
 
+const MD_SECTION_LABELS: Array<{ key: keyof NonNullable<MdOptions["sections"]>; label: string }> = [
+  { key: "colors", label: "Warna" },
+  { key: "typography", label: "Tipografi" },
+  { key: "textStyles", label: "Gaya teks" },
+  { key: "radius", label: "Radius" },
+  { key: "spacing", label: "Spacing" },
+  { key: "shadows", label: "Shadows" },
+  { key: "audit", label: "Audit CSS" },
+  { key: "health", label: "Health" },
+  { key: "accessibility", label: "A11y" },
+  { key: "responsive", label: "Responsif" },
+];
+
+function MdControls({
+  opts,
+  onChange,
+}: {
+  opts: MdOptions;
+  onChange: (o: MdOptions) => void;
+}) {
+  function toggle(key: keyof NonNullable<MdOptions["sections"]>) {
+    const cur = opts.sections ?? {};
+    onChange({
+      ...opts,
+      sections: { ...cur, [key]: !(cur[key] ?? true) },
+    });
+  }
+
+  return (
+    <div className="mb-4 grid gap-3 rounded-xl border border-zinc-800 p-4 md:grid-cols-2">
+      <div>
+        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">Bahasa</div>
+        <div className="inline-flex rounded-lg border border-zinc-700 p-0.5">
+          {(["id", "en"] as MdLang[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => onChange({ ...opts, lang: l })}
+              className={`rounded-md px-3 py-1 text-xs transition-colors ${
+                (opts.lang ?? "id") === l ? "bg-zinc-100 text-zinc-900" : "text-zinc-400"
+              }`}
+            >
+              {l === "id" ? "Indonesia" : "English"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">
+          Bagian yang disertakan
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {MD_SECTION_LABELS.map((s) => {
+            const on = opts.sections?.[s.key] ?? true;
+            return (
+              <button
+                key={s.key}
+                onClick={() => toggle(s.key)}
+                className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                  on
+                    ? "border-zinc-400 bg-zinc-700 text-white"
+                    : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
+                }`}
+              >
+                {on ? "✓ " : ""}
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MdPanel({ result }: { result: DesignModel }) {
-  const md = useMemo(() => buildDesignMd(result), [result]);
+  const [opts, setOpts] = useState<MdOptions>({});
+  const md = useMemo(() => buildDesignMd(result, opts), [result, opts]);
   const [copied, setCopied] = useState(false);
   const filename = buildDownloadFilename(result.source.url);
 
@@ -411,8 +487,9 @@ function MdPanel({ result }: { result: DesignModel }) {
     URL.revokeObjectURL(url);
   }
 
-  return (
+return (
     <>
+      <MdControls opts={opts} onChange={setOpts} />
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           onClick={copy}
@@ -582,8 +659,21 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
   );
 }
 
-function PlaygroundPanel({ result }: { result: DesignModel }) {
-  const initial = useMemo(() => playgroundFromModel(result), [result]);
+function PlaygroundPanel({
+  result,
+  prefill,
+}: {
+  result: DesignModel;
+  prefill?: { colors?: Record<string, string>; radius?: Record<string, string> } | null;
+}) {
+  const initial = useMemo(() => {
+    const base = playgroundFromModel(result);
+    if (prefill) {
+      if (prefill.colors) Object.assign(base.colors, prefill.colors);
+      if (prefill.radius) Object.assign(base.radius, prefill.radius);
+    }
+    return base;
+  }, [result, prefill]);
   const [colors, setColors] = useState<Record<string, string>>(() => initial.colors);
   const [radius, setRadius] = useState<Record<string, string>>(() => initial.radius);
   const [copied, setCopied] = useState(false);
@@ -892,7 +982,11 @@ function A11yPanel({ result }: { result: DesignModel }) {
 }
 
 function ExportPanel({ result }: { result: DesignModel }) {
-  const files: Record<string, string> = useMemo(() => buildExports(result).files, [result]);
+  const [opts, setOpts] = useState<MdOptions>({});
+  const files: Record<string, string> = useMemo(
+    () => buildExports(result, opts).files,
+    [result, opts],
+  );
   const [copied, setCopied] = useState<string | null>(null);
 
   async function copy(key: string) {
@@ -916,7 +1010,7 @@ function ExportPanel({ result }: { result: DesignModel }) {
   }
 
   function downloadZip() {
-    const { name, data } = buildZip(result);
+    const { name, data } = buildZip(result, opts);
     const bytes = new Uint8Array(data);
     const blob = new Blob([bytes], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
@@ -929,6 +1023,7 @@ function ExportPanel({ result }: { result: DesignModel }) {
 
   return (
     <>
+      <MdControls opts={opts} onChange={setOpts} />
       <div className="mb-4 flex items-center justify-between">
         <SectionHeader title="Artefak design system" subtitle="Berdasarkan DesignModel, bukan output scraper mentah" />
         <button
@@ -1099,14 +1194,156 @@ function HistoryPanel({
   );
 }
 
+function DriftPanel({
+  current,
+  onLoad,
+}: {
+  current: DesignModel;
+  onLoad: (m: DesignModel) => void;
+}) {
+  const [snapshots, setSnapshots] = useState<ScanSession[]>(() => {
+    const all = listSessions();
+    return all
+      .filter((s) => s.url === current.source.url)
+      .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+  });
+  const [flash, setFlash] = useState("");
+
+  const timeline = useMemo(() => {
+    const entries: Array<{
+      session: ScanSession;
+      delta: DiffResult | null;
+      prev: ScanSession | null;
+    }> = [];
+    for (let i = 0; i < snapshots.length; i++) {
+      const cur = snapshots[i];
+      const prev = i > 0 ? snapshots[i - 1] : null;
+      entries.push({ session: cur, delta: diffModels(prev?.model, cur.model), prev });
+    }
+    return entries;
+  }, [snapshots]);
+
+  const totalDrift = useMemo(() => {
+    let added = 0;
+    let removed = 0;
+    let changed = 0;
+    for (const e of timeline) {
+      if (!e.delta) continue;
+      added += e.delta.summary.added;
+      removed += e.delta.summary.removed;
+      changed += e.delta.summary.changed;
+    }
+    return { added, removed, changed };
+  }, [timeline]);
+
+  function flashMsg(text: string) {
+    setFlash(text);
+    setTimeout(() => setFlash(""), 2500);
+  }
+
+  function handleSnapshot() {
+    saveSession(current);
+    const all = listSessions();
+    setSnapshots(
+      all
+        .filter((s) => s.url === current.source.url)
+        .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)),
+    );
+    flashMsg("Snapshot tersimpan — drift dihitung otomatis.");
+  }
+
+  return (
+    <>
+      <SectionHeader
+        title="Design Drift"
+        subtitle="Lacak perubahan design system antar snapshot secara otomatis (berbasis riwayat scan)"
+      />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={handleSnapshot}
+          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+        >
+          Simpan snapshot drift
+        </button>
+        {timeline.length > 1 && (
+          <span className="rounded-full bg-amber-950 px-3 py-1 text-xs text-amber-300">
+            Total drift: +{totalDrift.added} / -{totalDrift.removed} / ~{totalDrift.changed}
+          </span>
+        )}
+      </div>
+      {flash && <p className="mb-3 text-xs text-emerald-400">{flash}</p>}
+
+      {timeline.length === 0 ? (
+        <p className="text-sm text-zinc-500">
+          Belum ada snapshot untuk URL ini. Simpan snapshot pertama untuk mulai melacak drift design system.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {[...timeline].reverse().map((e, idx) => (
+            <div key={e.session.id} className="rounded-xl border border-zinc-800 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-medium">{e.session.name}</div>
+                  <div className="text-[11px] text-zinc-500">
+                    {new Date(e.session.createdAt).toLocaleString("id-ID")}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {idx === 0 && (
+                    <button
+                      onClick={() => onLoad(e.session.model)}
+                      className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                    >
+                      Muat
+                    </button>
+                  )}
+                  {e.delta && e.prev && (
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        e.delta.summary.added + e.delta.summary.removed + e.delta.summary.changed === 0
+                          ? "bg-emerald-950 text-emerald-300"
+                          : "bg-amber-950 text-amber-300"
+                      }`}
+                    >
+                      +{e.delta.summary.added} / -{e.delta.summary.removed} / ~{e.delta.summary.changed}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {e.delta && e.prev && e.delta.groups.some((g) => g.added.length + g.removed.length + g.changed.length > 0) && (
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+                  {e.delta.groups
+                    .filter((g) => g.added.length + g.removed.length + g.changed.length > 0)
+                    .map((g) => (
+                      <span key={g.category}>
+                        <span className="text-zinc-300">{g.category}</span>:{" "}
+                        <span className="text-emerald-400">+{g.added.length}</span>{" "}
+                        <span className="text-red-400">-{g.removed.length}</span>{" "}
+                        <span className="text-amber-400">~{g.changed.length}</span>
+                      </span>
+                    ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 function AiPanel({
   result,
   config,
   onChange,
+  onRecommend,
+  onGoToPlayground,
 }: {
   result: DesignModel;
   config: AiConfig | null;
   onChange: (c: AiConfig | null) => void;
+  onRecommend?: (p: { colors?: Record<string, string>; radius?: Record<string, string> }) => void;
+  onGoToPlayground?: () => void;
 }) {
   const md = useMemo(() => buildDesignMd(result), [result]);
   const [contextSections, setContextSections] = useState<ModelContextSection[]>([
@@ -1128,6 +1365,10 @@ function AiPanel({
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
   const [switchedNote, setSwitchedNote] = useState("");
+  const [recommendation, setRecommendation] = useState<{
+    changes: Array<{ type: string; key: string; value: string; reason: string }>;
+  } | null>(null);
+  const [recommendError, setRecommendError] = useState("");
 
   const CONTEXT_OPTIONS: Array<{ id: ModelContextSection; label: string }> = [
     { id: "tokens", label: "Token" },
@@ -1174,6 +1415,63 @@ function AiPanel({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function recommend() {
+    if (!guard()) return;
+    const cfg = config!;
+    setBusy(true);
+    setError("");
+    setRecommendError("");
+    setOutput("");
+    setSwitchedNote("");
+    const colorList = [...result.tokens.colors.primary, ...result.tokens.colors.neutral]
+      .slice(0, 12)
+      .map((c) => c.hex)
+      .join(", ");
+    const radiusList = result.tokens.radius.slice(0, 6).map((r) => r.raw).join(", ");
+    const prompt =
+      `Kamu adalah konsultan design system. Berdasarkan DesignModel berikut untuk ${result.source.url}:\n\n` +
+      `Warna yang ada: ${colorList}\n` +
+      `Radius yang ada: ${radiusList}\n` +
+      `\nBuat rekomendasi perbaikan design system. Yang boleh diubah: warna (hex) dan radius (nilai radius CSS, mis. '16px').\n` +
+      `Balas HANYA JSON array, tanpa teks lain atau markdown code fence, format:\n` +
+      `[{"type":"color"|"radius","key":"<nilai asli persis yang mau diubah>","value":"<nilai baru>","reason":"<singkat>"}]\n` +
+      `Pastikan 'key' adalah salah satu nilai persis dari daftar di atas. Maksimal 6 item.`;
+    try {
+      let acc = "";
+      await streamAiWithAutoSwitch(cfg, prompt, (chunk) => {
+        acc += chunk;
+        setOutput(acc);
+      }, undefined, (from, to) => setSwitchedNote(`Auto-switch: model ${from} → ${to} (rate limit).`));
+      const parsed = JSON.parse(acc.replace(/```json|```/g, "").trim()) as Array<{
+        type?: string;
+        key?: string;
+        value?: string;
+        reason?: string;
+      }>;
+      if (!Array.isArray(parsed)) throw new Error("Respons AI bukan array.");
+      const changes = parsed
+        .filter((c) => c.type && c.key && c.value)
+        .map((c) => ({ type: c.type!, key: c.key!, value: c.value!, reason: c.reason ?? "" }));
+      setRecommendation({ changes });
+    } catch (e) {
+      setRecommendError(e instanceof Error ? e.message : "Gagal memproses rekomendasi AI.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function applyRecommendation() {
+    if (!recommendation) return;
+    const colors: Record<string, string> = {};
+    const radius: Record<string, string> = {};
+    for (const ch of recommendation.changes) {
+      if (ch.type === "color") colors[ch.key] = ch.value;
+      if (ch.type === "radius") radius[ch.key] = ch.value;
+    }
+    onRecommend?.({ colors, radius });
+    onGoToPlayground?.();
   }
 
   async function sendChat() {
@@ -1228,6 +1526,13 @@ function AiPanel({
         >
           Tinjau desain
         </button>
+        <button
+          onClick={recommend}
+          disabled={busy}
+          className="rounded-lg border border-emerald-700 px-3 py-1.5 text-xs text-emerald-300 hover:border-emerald-500 disabled:opacity-60"
+        >
+          {busy ? "Menyusun…" : "Rekomendasi perbaikan"}
+        </button>
         <AiSettingsButton config={config} onChange={onChange} />
       </div>
 
@@ -1258,6 +1563,33 @@ function AiPanel({
 
       {switchedNote && <p className="mb-3 text-xs text-amber-400">{switchedNote}</p>}
       {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+
+      {recommendError && <p className="mb-3 text-sm text-red-400">{recommendError}</p>}
+
+      {recommendation && recommendation.changes.length > 0 && (
+        <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/20 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm font-semibold text-emerald-300">Rekomendasi perbaikan</div>
+            <button
+              onClick={applyRecommendation}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+            >
+              Terapkan ke Playground →
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {recommendation.changes.map((ch, i) => (
+              <div key={i} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-lg bg-black/30 px-3 py-2 text-xs">
+                <code className="text-zinc-400">{ch.key}</code>
+                <span className="text-zinc-500">→</span>
+                <code className="text-emerald-300">{ch.value}</code>
+                <span className="text-[11px] text-zinc-500">({ch.type})</span>
+                {ch.reason && <span className="w-full text-[11px] text-zinc-400">{ch.reason}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-5 rounded-xl border border-zinc-800 bg-zinc-950 p-3">
         <div className="mb-2 text-[11px] uppercase tracking-wide text-zinc-500">
@@ -1315,12 +1647,34 @@ function AiPanel({
   );
 }
 
-export function FullReport({ response }: { response: ExtractResponse }) {
+export function FullReport({
+  response,
+  initialAiConfig,
+  onAiConfigChange,
+}: {
+  response: ExtractResponse;
+  initialAiConfig?: AiConfig | null;
+  onAiConfigChange?: (c: AiConfig | null) => void;
+}) {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("colors");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [aiConfig, setAiConfig] = useState<AiConfig | null>(() => loadConfig());
+  const [aiConfig, setAiConfig] = useState<AiConfig | null>(() =>
+    initialAiConfig !== undefined ? initialAiConfig : loadConfig(),
+  );
   const [loaded, setLoaded] = useState<DesignModel | null>(null);
+  const [aiPrefill, setAiPrefill] = useState<{ colors?: Record<string, string>; radius?: Record<string, string> } | null>(null);
+  const [prefillKey, setPrefillKey] = useState(0);
+
+  function handleRecommend(p: { colors?: Record<string, string>; radius?: Record<string, string> }) {
+    setAiPrefill(p);
+    setPrefillKey((k) => k + 1);
+  }
+
+  function syncAiConfig(c: AiConfig | null) {
+    setAiConfig(c);
+    onAiConfigChange?.(c);
+  }
   const results = response.results;
   const baseResult = results[activeIndex];
   const result = loaded ?? baseResult;
@@ -1339,6 +1693,7 @@ export function FullReport({ response }: { response: ExtractResponse }) {
     { id: "playground", label: t("tab.playground") },
     { id: "diff", label: t("tab.diff") },
     { id: "history", label: t("tab.history") },
+    { id: "drift", label: "Drift" },
     { id: "health", label: t("tab.health") },
     { id: "accessibility", label: t("tab.accessibility") },
     { id: "export", label: t("tab.export") },
@@ -1425,9 +1780,12 @@ export function FullReport({ response }: { response: ExtractResponse }) {
         {tab === "components" && <ComponentsPanel result={result} />}
         {tab === "responsive" && <ResponsivePanel result={result} />}
         {tab === "darkmode" && <DarkModePanel result={result} />}
-        {tab === "playground" && <PlaygroundPanel result={result} />}
+        {tab === "playground" && (
+          <PlaygroundPanel key={prefillKey} result={result} prefill={aiPrefill} />
+        )}
         {tab === "diff" && <DiffPanel result={result} />}
         {tab === "history" && <HistoryPanel current={result} onLoad={setLoaded} />}
+        {tab === "drift" && <DriftPanel current={result} onLoad={setLoaded} />}
         {tab === "health" && <HealthPanel result={result} />}
         {tab === "accessibility" && <A11yPanel result={result} />}
         {tab === "export" && <ExportPanel result={result} />}
@@ -1438,7 +1796,9 @@ export function FullReport({ response }: { response: ExtractResponse }) {
           <AiPanel
             result={result}
             config={aiConfig}
-            onChange={setAiConfig}
+            onChange={syncAiConfig}
+            onRecommend={handleRecommend}
+            onGoToPlayground={() => setTab("playground")}
           />
         )}
       </div>

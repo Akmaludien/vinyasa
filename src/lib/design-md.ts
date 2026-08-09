@@ -9,7 +9,152 @@ function fmtBytes(n: number): string {
   return `${n} B`;
 }
 
-export function buildDesignMd(r: DesignModel): string {
+export type MdLang = "id" | "en";
+
+export interface MdOptions {
+  lang?: MdLang;
+  sections?: {
+    colors?: boolean;
+    typography?: boolean;
+    textStyles?: boolean;
+    radius?: boolean;
+    spacing?: boolean;
+    shadows?: boolean;
+    audit?: boolean;
+    health?: boolean;
+    accessibility?: boolean;
+    responsive?: boolean;
+  };
+}
+
+export function buildDesignMd(r: DesignModel, opts?: MdOptions): string {
+  const lang: MdLang = opts?.lang ?? "id";
+  const sec = {
+    colors: true,
+    typography: true,
+    textStyles: true,
+    radius: true,
+    spacing: true,
+    shadows: true,
+    audit: true,
+    health: true,
+    accessibility: true,
+    responsive: true,
+    ...(opts?.sections ?? {}),
+  };
+  const L =
+    lang === "en"
+      ? {
+          extractedFrom: "Extracted from",
+          at: "on",
+          overall: "Overall accuracy score",
+          color: "Color",
+          typography: "Typography",
+          radius: "Radius",
+          sectionColors: "Colors",
+          primary: "Primary colors",
+          neutral: "Neutral colors",
+          token: "Token",
+          hex: "Hex",
+          frequency: "Use count",
+          share: "Share",
+          sectionType: "Typography",
+          fontFamily: "Font families",
+          fontScale: "Font size scale",
+          size: "Size",
+          weight: "Font weights",
+          lineHeight: "Line height",
+          textStyles: "Common text styles",
+          font: "Font",
+          selector: "Selector",
+          radiusTitle: "Border radius",
+          value: "Value",
+          spacingTitle: "Spacing (margin / padding / gap)",
+          shadowsTitle: "Shadows",
+          auditTitle: "CSS source audit",
+          source: "Source",
+          mode: "Type",
+          sizeBytes: "Size",
+          rules: "Rules",
+          decls: "Declarations",
+          colorAcc: "Color acc.",
+          typeAcc: "Type acc.",
+          score: "Score",
+          notes: "Notes",
+          note1: "Tokens extracted from CSS actually loaded by the page (external stylesheets, `<style>` blocks, and `style` attributes).",
+          note2: "Frequency = how often a value appears across all CSS rules.",
+          note3: "Accuracy score = share of successfully parsed declarations over total declarations in that category.",
+          healthTitle: "Design Health",
+          healthOverall: "Overall score",
+          category: "Category",
+          a11yTitle: "Accessibility (WCAG)",
+          a11yNote: "Automatic analysis — not an official WCAG certification.",
+          fail: "fail",
+          warning: "warning",
+          pass: "pass",
+          responsiveTitle: "Responsive",
+          mobile: "Mobile",
+          tablet: "Tablet",
+          desktop: "Desktop",
+          breakpoints: "Breakpoints",
+          generatedAuto: "Design tokens extracted automatically by Vinyasa from the page's loaded CSS.",
+        }
+      : {
+          extractedFrom: "Diekstrak dari",
+          at: "pada",
+          overall: "Skor akurasi keseluruhan",
+          color: "Warna",
+          typography: "Tipografi",
+          radius: "Radius",
+          sectionColors: "Warna",
+          primary: "Warna primer",
+          neutral: "Warna netral",
+          token: "Token",
+          hex: "Hex",
+          frequency: "Frekuensi",
+          share: "Porsi",
+          sectionType: "Tipografi",
+          fontFamily: "Font family",
+          fontScale: "Ukuran font (skala)",
+          size: "Ukuran",
+          weight: "Berat font",
+          lineHeight: "Line height",
+          textStyles: "Gaya teks yang sering dipakai",
+          font: "Font",
+          selector: "Selector",
+          radiusTitle: "Border radius",
+          value: "Nilai",
+          spacingTitle: "Spacing (margin / padding / gap)",
+          shadowsTitle: "Shadows",
+          auditTitle: "Audit sumber CSS",
+          source: "Sumber",
+          mode: "Tipe",
+          sizeBytes: "Ukuran",
+          rules: "Rules",
+          decls: "Deklarasi",
+          colorAcc: "Akurasi warna",
+          typeAcc: "Akurasi tipografi",
+          score: "Skor",
+          notes: "Catatan",
+          note1: "Token diekstrak dari CSS yang benar-benar dimuat halaman (stylesheet eksternal, blok `<style>`, dan atribut `style`).",
+          note2: "Frekuensi = berapa kali nilai muncul di seluruh rule CSS.",
+          note3: "Skor akurasi = proporsi deklarasi yang berhasil diparsing terhadap total deklarasi pada kategori tersebut.",
+          healthTitle: "Design Health",
+          healthOverall: "Skor keseluruhan",
+          category: "Kategori",
+          a11yTitle: "Aksesibilitas (WCAG)",
+          a11yNote: "Analisis otomatis — bukan sertifikasi WCAG resmi.",
+          fail: "gagal",
+          warning: "peringatan",
+          pass: "lolos",
+          responsiveTitle: "Responsif",
+          mobile: "Mobile",
+          tablet: "Tablet",
+          desktop: "Desktop",
+          breakpoints: "Breakpoints",
+          generatedAuto: "Token diekstrak otomatis oleh Vinyasa dari CSS yang dimuat halaman.",
+        };
+
   const { tokens } = r;
   const colors = tokens.colors;
   const fonts = tokens.typography;
@@ -17,84 +162,89 @@ export function buildDesignMd(r: DesignModel): string {
   const radius = tokens.radius;
   const sources = r.pages[0]?.sources ?? [];
   const scores = r.pages[0]?.scores ?? { color: 0, typography: 0, radius: 0, overall: 0 };
+  const dateStr = new Date(r.metadata.generatedAt).toLocaleString(lang === "en" ? "en-US" : "id-ID");
   const lines: string[] = [];
 
   lines.push(`# Design System — ${r.source.title}`);
   lines.push("");
-  lines.push(`> Diekstrak dari **${r.source.url}** pada ${new Date(r.metadata.generatedAt).toLocaleString("id-ID")}.`);
+  lines.push(`> ${L.extractedFrom} **${r.source.url}** ${L.at} ${dateStr}.`);
   lines.push("");
-  lines.push(`**Skor akurasi keseluruhan: ${scores.overall}/100**`);
-  lines.push("");
-
-  lines.push(`- **Warna:** ${scores.color}/100`);
-  lines.push(`- **Tipografi:** ${scores.typography}/100`);
-  lines.push(`- **Radius:** ${scores.radius}/100`);
+  lines.push(`**${L.overall}: ${scores.overall}/100**`);
   lines.push("");
 
-  lines.push("---");
-  lines.push("");
-  lines.push("## Warna");
-  lines.push("");
-  lines.push("### Warna primer");
-  lines.push("");
-  lines.push("| Token | Hex | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- | --- |");
-  for (const c of colors.primary) {
-    lines.push(`| ${c.name} | \`${c.hex}\` | ${c.count} | ${c.usage}% |`);
-  }
-  lines.push("");
-  lines.push("### Warna netral");
-  lines.push("");
-  lines.push("| Token | Hex | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- | --- |");
-  for (const c of colors.neutral) {
-    lines.push(`| ${c.name} | \`${c.hex}\` | ${c.count} | ${c.usage}% |`);
-  }
+  lines.push(`- **${L.color}:** ${scores.color}/100`);
+  lines.push(`- **${L.typography}:** ${scores.typography}/100`);
+  lines.push(`- **${L.radius}:** ${scores.radius}/100`);
   lines.push("");
 
-  lines.push("---");
-  lines.push("");
-  lines.push("## Tipografi");
-  lines.push("");
-  lines.push("### Font family");
-  lines.push("");
-  lines.push("| Font | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- |");
-  for (const f of fonts.families) {
-    lines.push(`| \`${f.raw}\` | ${f.count} | ${f.usage}% |`);
-  }
-  lines.push("");
-  lines.push("### Ukuran font (skala)");
-  lines.push("");
-  lines.push("| Ukuran | px | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- | --- |");
-  for (const s of fonts.sizes) {
-    lines.push(`| \`${s.raw}\` | ${s.px}px | ${s.count} | ${s.usage}% |`);
-  }
-  lines.push("");
-  lines.push("### Berat font");
-  lines.push("");
-  lines.push("| Berat | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- |");
-  for (const w of fonts.weights) {
-    lines.push(`| ${w.value} | ${w.count} | ${w.usage}% |`);
-  }
-  lines.push("");
-  lines.push("### Line height");
-  lines.push("");
-  lines.push("| Nilai | Frekuensi | Porsi |");
-  lines.push("| --- | --- | --- |");
-  for (const l of fonts.lineHeights) {
-    lines.push(`| \`${l.raw}\` | ${l.count} | ${l.usage}% |`);
-  }
-  lines.push("");
-
-  if (textStyles.length > 0) {
+  if (sec.colors) {
     lines.push("---");
     lines.push("");
-    lines.push("## Gaya teks yang sering dipakai");
+    lines.push(`## ${L.sectionColors}`);
     lines.push("");
-    lines.push("| Font | Ukuran | Berat | Line height | Selector |");
+    lines.push(`### ${L.primary}`);
+    lines.push("");
+    lines.push(`| ${L.token} | ${L.hex} | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- | --- |");
+    for (const c of colors.primary) {
+      lines.push(`| ${c.name} | \`${c.hex}\` | ${c.count} | ${c.usage}% |`);
+    }
+    lines.push("");
+    lines.push(`### ${L.neutral}`);
+    lines.push("");
+    lines.push(`| ${L.token} | ${L.hex} | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- | --- |");
+    for (const c of colors.neutral) {
+      lines.push(`| ${c.name} | \`${c.hex}\` | ${c.count} | ${c.usage}% |`);
+    }
+    lines.push("");
+  }
+
+  if (sec.typography) {
+    lines.push("---");
+    lines.push("");
+    lines.push(`## ${L.sectionType}`);
+    lines.push("");
+    lines.push(`### ${L.fontFamily}`);
+    lines.push("");
+    lines.push(`| ${L.font} | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- |");
+    for (const f of fonts.families) {
+      lines.push(`| \`${f.raw}\` | ${f.count} | ${f.usage}% |`);
+    }
+    lines.push("");
+    lines.push(`### ${L.fontScale}`);
+    lines.push("");
+    lines.push(`| ${L.size} | px | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- | --- |");
+    for (const s of fonts.sizes) {
+      lines.push(`| \`${s.raw}\` | ${s.px}px | ${s.count} | ${s.usage}% |`);
+    }
+    lines.push("");
+    lines.push(`### ${L.weight}`);
+    lines.push("");
+    lines.push(`| ${L.weight} | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- |");
+    for (const w of fonts.weights) {
+      lines.push(`| ${w.value} | ${w.count} | ${w.usage}% |`);
+    }
+    lines.push("");
+    lines.push(`### ${L.lineHeight}`);
+    lines.push("");
+    lines.push(`| ${L.value} | ${L.frequency} | ${L.share} |`);
+    lines.push("| --- | --- | --- |");
+    for (const l of fonts.lineHeights) {
+      lines.push(`| \`${l.raw}\` | ${l.count} | ${l.usage}% |`);
+    }
+    lines.push("");
+  }
+
+  if (sec.textStyles && textStyles.length > 0) {
+    lines.push("---");
+    lines.push("");
+    lines.push(`## ${L.textStyles}`);
+    lines.push("");
+    lines.push(`| ${L.font} | ${L.size} | ${L.weight} | ${L.lineHeight} | ${L.selector} |`);
     lines.push("| --- | --- | --- | --- | --- |");
     for (const t of textStyles) {
       lines.push(
@@ -104,12 +254,12 @@ export function buildDesignMd(r: DesignModel): string {
     lines.push("");
   }
 
-  if (radius.length > 0) {
+  if (sec.radius && radius.length > 0) {
     lines.push("---");
     lines.push("");
-    lines.push("## Border radius");
+    lines.push(`## ${L.radiusTitle}`);
     lines.push("");
-    lines.push("| Nilai | Frekuensi | Porsi |");
+    lines.push(`| ${L.value} | ${L.frequency} | ${L.share} |`);
     lines.push("| --- | --- | --- |");
     for (const r2 of radius) {
       lines.push(`| \`${r2.raw}\` | ${r2.count} | ${r2.usage}% |`);
@@ -117,12 +267,12 @@ export function buildDesignMd(r: DesignModel): string {
     lines.push("");
   }
 
-  if (tokens.spacing.length > 0) {
+  if (sec.spacing && tokens.spacing.length > 0) {
     lines.push("---");
     lines.push("");
-    lines.push("## Spacing (margin / padding / gap)");
+    lines.push(`## ${L.spacingTitle}`);
     lines.push("");
-    lines.push("| Nilai | Frekuensi | Porsi |");
+    lines.push(`| ${L.value} | ${L.frequency} | ${L.share} |`);
     lines.push("| --- | --- | --- |");
     for (const s of tokens.spacing) {
       lines.push(`| \`${s.raw}\` | ${s.count} | ${s.usage}% |`);
@@ -130,10 +280,10 @@ export function buildDesignMd(r: DesignModel): string {
     lines.push("");
   }
 
-  if (tokens.shadows.length > 0) {
+  if (sec.shadows && tokens.shadows.length > 0) {
     lines.push("---");
     lines.push("");
-    lines.push("## Shadows");
+    lines.push(`## ${L.shadowsTitle}`);
     lines.push("");
     for (const s of tokens.shadows) {
       lines.push(`- \`${s.raw}\``);
@@ -141,37 +291,39 @@ export function buildDesignMd(r: DesignModel): string {
     lines.push("");
   }
 
-  lines.push("---");
-  lines.push("");
-  lines.push("## Audit sumber CSS");
-  lines.push("");
-  lines.push("| Sumber | Tipe | Ukuran | Rules | Deklarasi | Akurasi warna | Akurasi tipografi | Skor |");
-  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
-  for (const s of sources) {
-    lines.push(
-      `| \`${s.url}\` | ${s.kind} | ${fmtBytes(s.sizeBytes)} | ${s.ruleCount} | ${s.declarationCount} | ${s.colorScore}% | ${s.typographyScore}% | ${s.accuracy} |`,
-    );
+  if (sec.audit) {
+    lines.push("---");
+    lines.push("");
+    lines.push(`## ${L.auditTitle}`);
+    lines.push("");
+    lines.push(`| ${L.source} | ${L.mode} | ${L.sizeBytes} | ${L.rules} | ${L.decls} | ${L.colorAcc} | ${L.typeAcc} | ${L.score} |`);
+    lines.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (const s of sources) {
+      lines.push(
+        `| \`${s.url}\` | ${s.kind} | ${fmtBytes(s.sizeBytes)} | ${s.ruleCount} | ${s.declarationCount} | ${s.colorScore}% | ${s.typographyScore}% | ${s.accuracy} |`,
+      );
+    }
+    lines.push("");
   }
-  lines.push("");
 
   lines.push("---");
   lines.push("");
-  lines.push("## Catatan");
+  lines.push(`## ${L.notes}`);
   lines.push("");
-  lines.push("- Token diekstrak dari CSS yang benar-benar dimuat halaman (stylesheet eksternal, blok `<style>`, dan atribut `style`).");
-  lines.push("- Frekuensi = berapa kali nilai muncul di seluruh rule CSS.");
-  lines.push("- Skor akurasi = proporsi deklarasi yang berhasil diparsing terhadap total deklarasi pada kategori tersebut.");
+  lines.push(`- ${L.note1}`);
+  lines.push(`- ${L.note2}`);
+  lines.push(`- ${L.note3}`);
 
   const health = r.health as HealthReport | null;
-  if (health) {
+  if (sec.health && health) {
     lines.push("");
     lines.push("---");
     lines.push("");
-    lines.push("## Design Health");
+    lines.push(`## ${L.healthTitle}`);
     lines.push("");
-    lines.push(`**Skor keseluruhan: ${health.overall}/100**`);
+    lines.push(`**${L.healthOverall}: ${health.overall}/100**`);
     lines.push("");
-    lines.push("| Kategori | Skor |");
+    lines.push(`| ${L.category} | ${L.score} |`);
     lines.push("| --- | --- |");
     for (const cat of [health.color, health.typography, health.spacing, health.radius, health.component]) {
       lines.push(`| ${cat.name} | ${cat.score}/100 |`);
@@ -182,31 +334,31 @@ export function buildDesignMd(r: DesignModel): string {
   }
 
   const a11y = r.accessibility as A11yReport | null;
-  if (a11y) {
+  if (sec.accessibility && a11y) {
     lines.push("");
     lines.push("---");
     lines.push("");
-    lines.push("## Aksesibilitas (WCAG)");
+    lines.push(`## ${L.a11yTitle}`);
     lines.push("");
-    lines.push(`- AA: ${a11y.wcagAA.critical} gagal, ${a11y.wcagAA.warning} peringatan, ${a11y.wcagAA.pass} lolos`);
-    lines.push(`- AAA: ${a11y.wcagAAA.critical} gagal, ${a11y.wcagAAA.warning} peringatan, ${a11y.wcagAAA.pass} lolos`);
+    lines.push(`- AA: ${a11y.wcagAA.critical} ${L.fail}, ${a11y.wcagAA.warning} ${L.warning}, ${a11y.wcagAA.pass} ${L.pass}`);
+    lines.push(`- AAA: ${a11y.wcagAAA.critical} ${L.fail}, ${a11y.wcagAAA.warning} ${L.warning}, ${a11y.wcagAAA.pass} ${L.pass}`);
     for (const iss of a11y.issues.slice(0, 6)) {
       lines.push(`- [${iss.severity}] ${iss.message}`);
     }
     lines.push("");
-    lines.push("> Analisis otomatis — bukan sertifikasi WCAG resmi.");
+    lines.push(`> ${L.a11yNote}`);
   }
 
   const resp = r.responsive as ResponsiveReport | null;
-  if (resp) {
+  if (sec.responsive && resp) {
     lines.push("");
     lines.push("---");
     lines.push("");
-    lines.push("## Responsif");
+    lines.push(`## ${L.responsiveTitle}`);
     lines.push("");
-    lines.push(`- Mobile: ${resp.mobile}/100 · Tablet: ${resp.tablet}/100 · Desktop: ${resp.desktop}/100`);
+    lines.push(`- ${L.mobile}: ${resp.mobile}/100 · ${L.tablet}: ${resp.tablet}/100 · ${L.desktop}: ${resp.desktop}/100`);
     if (resp.breakpoints.length > 0) {
-      lines.push(`- Breakpoints: ${resp.breakpoints.map((b) => `${b.feature} ${b.value}`).join(", ")}`);
+      lines.push(`- ${L.breakpoints}: ${resp.breakpoints.map((b) => `${b.feature} ${b.value}`).join(", ")}`);
     }
   }
 

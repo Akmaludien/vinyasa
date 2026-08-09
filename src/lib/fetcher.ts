@@ -151,13 +151,27 @@ export function extractSources(html: string, baseUrl: string): PageDocs {
 
 export async function hydrateSources(sources: CssSourceInput[]): Promise<CssSourceInput[]> {
   const out: CssSourceInput[] = [];
-  for (const src of sources) {
+  const seen = new Set<string>();
+
+  async function collect(src: CssSourceInput, depth: number) {
+    if (depth > 3) return;
     if (src.kind === "external") {
+      if (seen.has(src.url)) return;
+      seen.add(src.url);
       const css = await fetchCss(src.url);
-      if (css) out.push({ url: src.url, kind: src.kind, content: css });
+      if (!css) return;
+      out.push({ url: src.url, kind: src.kind, content: css });
+      for (const imp of expandImports(css, src.url)) {
+        if (!isSafeUrl(imp.url)) continue;
+        await collect({ url: imp.url, kind: "external", content: "" }, depth + 1);
+      }
     } else {
       out.push(src);
     }
+  }
+
+  for (const src of sources) {
+    await collect(src, 0);
   }
   return out;
 }

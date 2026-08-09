@@ -148,17 +148,22 @@ export async function deepScan(url: string, viewport = { width: 1280, height: 90
   return base;
 }
 
-export async function deepScanStyles(url: string): Promise<CssSourceInput[]> {
+export interface DeepScanStylesResult {
+  title: string;
+  sources: CssSourceInput[];
+}
+
+export async function deepScanStyles(url: string): Promise<DeepScanStylesResult> {
   let browser;
   try {
     browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
   } catch {
-    return [];
+    return { title: "", sources: [] };
   }
   try {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-    const css = await page.evaluate(() => {
+    const { title, css } = await page.evaluate(() => {
       const out: Array<{ url: string; content: string }> = [];
       for (const sheet of Array.from(document.styleSheets)) {
         let text = "";
@@ -171,9 +176,12 @@ export async function deepScanStyles(url: string): Promise<CssSourceInput[]> {
         }
         if (text.trim()) out.push({ url: sheet.href ?? "#runtime", content: text });
       }
-      return out;
+      return { title: document.title, css: out };
     });
-    return css.map((c) => ({ url: c.url, kind: "external" as const, content: c.content }));
+    return {
+      title,
+      sources: css.map((c) => ({ url: c.url, kind: "external" as const, content: c.content })),
+    };
   } finally {
     await browser.close().catch(() => undefined);
   }

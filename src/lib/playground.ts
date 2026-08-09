@@ -1,4 +1,4 @@
-import type { DesignModel, ColorToken } from "./model";
+import type { DesignModel } from "./model";
 
 export interface PlaygroundState {
   colors: Record<string, string>;
@@ -29,14 +29,4 @@ export function applyPlayground(m: DesignModel, state: PlaygroundState): DesignM
     if (state.radius[r.raw]) r.raw = state.radius[r.raw];
   }
   return clone;
-}
-
-export function diffTokens(a: ColorToken[], b: ColorToken[]): number {
-  let changed = 0;
-  const mapB = new Map(b.map((x) => [x.hex, x]));
-  for (const ta of a) {
-    const tb = mapB.get(ta.hex);
-    if (tb && tb.hex !== ta.hex) changed++;
-  }
-  return changed;
 }

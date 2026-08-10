@@ -21,6 +21,7 @@ import type { DarkModeReport } from "@/lib/darkmode";
 import { buildDesignSpecification } from "@/lib/spec";
 import { computeReadiness } from "@/lib/readiness";
 import { buildDesignPackZip } from "@/lib/pack";
+import { NexoraPanel } from "@/components/NexoraPanel";
 
 const BASELINE_KEY = "vinyasa-baseline-scan";
 
@@ -61,7 +62,8 @@ type Tab =
   | "preview"
   | "ai"
   | "project"
-  | "spec";
+  | "spec"
+  | "nexora";
 
 function fmtBytes(n: number): string {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -2468,6 +2470,10 @@ export function FullReport({
         { id: "spec", label: "Design Spec" },
       ],
     },
+    {
+      label: "Integrasi",
+      items: [{ id: "nexora", label: "Nexora" }],
+    },
   ];
 
   return (
@@ -2575,6 +2581,7 @@ export function FullReport({
         {tab === "preview" && <PreviewPanel result={result} />}
         {tab === "project" && <ProjectPanel result={result} />}
         {tab === "spec" && <SpecPanel result={result} />}
+        {tab === "nexora" && <NexoraPanel result={result} />}
         {tab === "ai" && (
           <AiPanel
             result={result}

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPageDocs, hydrateSources, isSafeUrl } from "@/lib/fetcher";
 import { extractDesignSystem } from "@/lib/extractor";
-import { deepScanStyles } from "@/lib/deepscan";
 import type { DesignModel, DesignStatistics, ExtractResponse, ScanScopeRequest } from "@/lib/model";
 import { parseScanScope, discoverUrls } from "@/lib/scan";
 
@@ -59,6 +58,7 @@ export async function POST(req: NextRequest) {
       let hydrated;
       let pageTitle = url;
       if (body.mode === "deep") {
+        const { deepScanStyles } = await import("@/lib/deepscan");
         const deep = await deepScanStyles(url);
         hydrated = deep.sources;
         if (hydrated.length === 0) {

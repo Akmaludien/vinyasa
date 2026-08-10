@@ -617,41 +617,118 @@ function PreviewPanel({ result }: { result: DesignModel }) {
 
 function ComponentsPanel({ result }: { result: DesignModel }) {
   const components = result.components;
+  const [sel, setSel] = useState(0);
+
   if (!components || components.length === 0) {
-    return <p className="text-sm text-zinc-500">Tidak ada pola komponen yang terdeteksi.</p>;
+    return <p className="text-sm text-muted">Tidak ada pola komponen yang terdeteksi.</p>;
   }
+
+  const active = components[sel];
+  const confColor = (v: number) =>
+    v >= 70 ? "text-success" : v >= 50 ? "text-warning" : "text-muted";
+
   return (
     <>
-      <SectionHeader title="Pola komponen" subtitle="Heuristik berbasis selector — bukan kepastian" />
-      <div className="grid gap-3 md:grid-cols-2">
-        {components.map((c) => (
-          <div key={c.name} className="rounded-xl border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">{c.name}</div>
-              <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400">
-                {c.confidence}% · x{c.count}
+      <SectionHeader
+        title="Pola komponen"
+        subtitle="Deteksi heuristik berbasis selector — bukan kepastian mutlak"
+      />
+      <div className="grid gap-4 lg:grid-cols-[260px,1fr]">
+        <div className="flex flex-col gap-1.5">
+          {components.map((c, i) => (
+            <button
+              key={c.name}
+              onClick={() => setSel(i)}
+              aria-current={i === sel ? "true" : undefined}
+              className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors ${
+                i === sel
+                  ? "border-brand-500 bg-brand-500/10"
+                  : "border-border bg-canvas hover:border-border-strong"
+              }`}
+            >
+              <span className="text-sm font-medium capitalize text-fg">{c.name}</span>
+              <span className="shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[11px] text-muted">
+                x{c.count} · {c.confidence}%
               </span>
+            </button>
+          ))}
+        </div>
+
+        {active && (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-canvas p-4">
+              <div>
+                <h3 className="text-base font-semibold capitalize text-fg">{active.name}</h3>
+                <p
+                  className={`text-xs font-medium ${confColor(active.confidence)}`}
+                >
+                  Confidence {active.confidence}% — {active.confidence >= 70 ? "pola konsisten" : "heuristik lemah"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="rounded-lg border border-border bg-surface px-4 py-1.5">
+                  <div className="text-base font-bold text-fg">{active.count}</div>
+                  <div className="text-[10px] text-faint">selector</div>
+                </div>
+                <div className="rounded-lg border border-border bg-surface px-4 py-1.5">
+                  <div className="text-base font-bold text-fg">{active.variantCount}</div>
+                  <div className="text-[10px] text-faint">varian</div>
+                </div>
+              </div>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {c.selectors.slice(0, 5).map((sel) => (
-                <code key={sel} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-400">
-                  {sel}
-                </code>
-              ))}
-            </div>
-            {Object.keys(c.properties).length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">
-                {Object.entries(c.properties)
-                  .slice(0, 4)
-                  .map(([prop, vals]) => (
-                    <span key={prop}>
-                      {prop}: {vals.slice(0, 3).join(", ")}
-                    </span>
+
+            {Object.keys(active.properties).length > 0 && (
+              <div className="rounded-xl border border-border bg-canvas p-4">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+                  Properti & nilai
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {Object.entries(active.properties).map(([prop, vals]) => (
+                    <div key={prop} className="rounded-lg border border-border bg-surface px-3 py-2">
+                      <div className="text-xs font-medium text-fg">{prop}</div>
+                      <div className="mt-0.5 flex flex-wrap gap-1">
+                        {vals.slice(0, 4).map((v) => (
+                          <code key={v} className="rounded bg-canvas px-1 py-0.5 text-[10px] text-muted">
+                            {v}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
                   ))}
+                </div>
               </div>
             )}
+
+            <div className="rounded-xl border border-border bg-canvas p-4">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+                Selector
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {active.selectors.map((s) => (
+                  <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                    {s}
+                  </code>
+                ))}
+              </div>
+              {active.pages.length > 0 && (
+                <div className="mt-3">
+                  <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Halaman</div>
+                  <div className="flex flex-wrap gap-1">
+                    {active.pages.slice(0, 8).map((p) => (
+                      <code key={p} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                        {p}
+                      </code>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-faint">
+              Deteksi berbasis nama class (heuristik). Interpretasi manual tetap disarankan untuk tata letak kompleks.
+            </p>
           </div>
-        ))}
+        )}
       </div>
     </>
   );
@@ -700,54 +777,96 @@ function HealthCategoryCard({ cat }: { cat: HealthCategory }) {
 
 function ResponsivePanel({ result }: { result: DesignModel }) {
   const r = result.responsive as ResponsiveReport | null;
+  const [vp, setVp] = useState(0);
   if (!r) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
-  const tiers = [
-    ["Mobile", r.mobile],
-    ["Tablet", r.tablet],
-    ["Desktop", r.desktop],
-  ] as Array<[string, number]>;
+  const tiers: Array<{ label: string; value: number; range: string }> = [
+    { label: "Mobile", value: r.mobile, range: "320–414px" },
+    { label: "Tablet", value: r.tablet, range: "768–1024px" },
+    { label: "Desktop", value: r.desktop, range: "1280–1920px" },
+  ];
+  const active = tiers[vp];
+  const c = ratingColor(active.value);
+
   return (
     <>
-      <div className="mb-4 grid grid-cols-3 gap-3">
-        {tiers.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-zinc-800 p-3 text-center">
-            <div className="text-xs text-zinc-500">{label}</div>
-            <div className="mt-1 text-lg font-bold">{value}</div>
-            <ScoreBar value={value} />
-          </div>
+      <SectionHeader
+        title="Responsive Lab"
+        subtitle="Skor & breakpoint berdasarkan heuristik CSS dari situs yang dianalisis"
+      />
+
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        {tiers.map((t, i) => (
+          <button
+            key={t.label}
+            onClick={() => setVp(i)}
+            aria-pressed={i === vp}
+            className={`rounded-xl border p-3 text-center transition-colors ${
+              i === vp
+                ? "border-brand-500 bg-brand-500/10"
+                : "border-border bg-canvas hover:border-border-strong"
+            }`}
+          >
+            <div className="text-xs font-medium text-fg">{t.label}</div>
+            <div className={`mt-1 text-2xl font-bold ${i === vp ? c.text : "text-fg"}`}>{t.value}</div>
+            <ScoreBar value={t.value} />
+            <div className="mt-1 text-[10px] text-faint">{t.range}</div>
+          </button>
         ))}
       </div>
+
+      <div className="mb-4 rounded-xl border border-border bg-canvas p-4">
+        <div className="flex items-baseline gap-2">
+          <span className={`text-3xl font-bold ${c.text}`}>{active.value}</span>
+          <span className="text-xs text-faint">/100</span>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Skor {active.label.toLowerCase()} ({active.range}) berdasarkan breakpoint, tipografi & spacing yang terdeteksi.
+        </p>
+      </div>
+
       {r.breakpoints.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2 text-xs">
-          {r.breakpoints.map((b) => (
-            <span key={`${b.feature}-${b.value}`} className="rounded-full border border-zinc-800 px-2.5 py-1">
-              {b.feature}: {b.value} {b.px !== null && <span className="text-zinc-500">({b.px}px)</span>}
-            </span>
+        <>
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Breakpoints</div>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {r.breakpoints.map((b) => (
+              <span key={`${b.feature}-${b.value}`} className="rounded-md border border-border bg-surface px-2.5 py-1 font-mono text-xs text-muted">
+                {b.feature}: {b.value}
+                {b.px !== null && <span className="text-faint"> ({b.px}px)</span>}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Isu terdeteksi</div>
+      {r.issues.length === 0 ? (
+        <p className="text-sm text-muted">Tidak ada isu responsif yang terdeteksi.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {r.issues.map((iss, i) => (
+            <div key={i} className="rounded-xl border border-border bg-canvas p-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                    iss.severity === "warning" ? "bg-amber-950 text-warning" : "bg-surface text-muted"
+                  }`}
+                >
+                  {iss.severity}
+                </span>
+                <span className="text-sm font-medium text-fg">{iss.kind}</span>
+              </div>
+              <p className="mt-1 text-sm text-muted">{iss.message}</p>
+              {iss.recommendation && <p className="mt-1 text-xs text-faint">{iss.recommendation}</p>}
+              {iss.evidence.length > 0 && (
+                <code className="mt-1 block font-mono text-[11px] text-faint">
+                  {iss.evidence.join(" · ")}
+                </code>
+              )}
+            </div>
           ))}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        {r.issues.map((iss, i) => (
-          <div key={i} className="rounded-xl border border-zinc-800 p-3">
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                  iss.severity === "warning" ? "bg-amber-500 text-black" : "bg-zinc-600 text-white"
-                }`}
-              >
-                {iss.severity}
-              </span>
-              <span className="text-sm font-medium">{iss.kind}</span>
-            </div>
-            <p className="mt-1 text-sm">{iss.message}</p>
-            {iss.recommendation && <p className="mt-1 text-xs text-zinc-400">{iss.recommendation}</p>}
-            {iss.evidence.length > 0 && (
-              <code className="mt-1 block text-[11px] text-zinc-500">{iss.evidence.join(" · ")}</code>
-            )}
-          </div>
-        ))}
-      </div>
-      <p className="mt-3 text-[11px] text-zinc-600">{r.note}</p>
+      <p className="mt-3 text-[11px] text-faint">{r.note}</p>
     </>
   );
 }
@@ -2080,14 +2199,14 @@ export function FullReport({
 
   const tabGroups: Array<{ label: string; items: Array<{ id: Tab; label: string }> }> = [
     {
-      label: "Keseluruhan",
+      label: t("nav.overall"),
       items: [
-        { id: "overview", label: "Overview" },
-        { id: "pages", label: "Pages" },
+        { id: "overview", label: t("nav.overview") },
+        { id: "pages", label: t("nav.pages") },
       ],
     },
     {
-      label: "Tokens",
+      label: t("nav.tokens"),
       items: [
         { id: "colors", label: t("tab.colors") },
         { id: "typography", label: t("tab.typography") },
@@ -2097,41 +2216,41 @@ export function FullReport({
       ],
     },
     {
-      label: "Components",
+      label: t("nav.components"),
       items: [{ id: "components", label: t("tab.components") }],
     },
     {
-      label: "Responsive",
+      label: t("nav.responsive"),
       items: [
         { id: "responsive", label: t("tab.responsive") },
         { id: "darkmode", label: t("tab.darkmode") },
       ],
     },
     {
-      label: "Analysis",
+      label: t("nav.analysis"),
       items: [
         { id: "health", label: t("tab.health") },
         { id: "accessibility", label: t("tab.accessibility") },
       ],
     },
     {
-      label: "AI",
+      label: t("nav.ai"),
       items: [{ id: "ai", label: t("tab.ai") }],
     },
     {
-      label: "Edit",
+      label: t("nav.edit"),
       items: [{ id: "playground", label: t("tab.playground") }],
     },
     {
-      label: "Compare",
+      label: t("nav.compare"),
       items: [
         { id: "diff", label: t("tab.diff") },
-        { id: "drift", label: "Drift" },
+        { id: "drift", label: t("nav.drift") },
         { id: "history", label: t("tab.history") },
       ],
     },
     {
-      label: "Export",
+      label: t("nav.export"),
       items: [
         { id: "export", label: t("tab.export") },
         { id: "audit", label: t("tab.audit") },

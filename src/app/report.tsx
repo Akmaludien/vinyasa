@@ -37,6 +37,7 @@ function saveBaseline(m: DesignModel) {
 
 type Tab =
   | "overview"
+  | "pages"
   | "colors"
   | "typography"
   | "spacing"
@@ -82,32 +83,123 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
   );
 }
 
-function ColorGrid({ tokens }: { tokens: ColorToken[] }) {
-  if (tokens.length === 0) return <p className="text-sm text-zinc-500">Tidak terdeteksi.</p>;
+function ColorGrid({
+  tokens,
+  onSelect,
+  selectedHex,
+}: {
+  tokens: ColorToken[];
+  onSelect: (t: ColorToken) => void;
+  selectedHex: string | null;
+}) {
+  if (tokens.length === 0) return <p className="text-sm text-muted">Tidak terdeteksi.</p>;
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
       {tokens.map((t) => (
-        <div key={t.hex} className="overflow-hidden rounded-xl border border-zinc-800">
-          <div className="h-14" style={{ background: t.hex }} />
+        <button
+          key={t.hex}
+          onClick={() => onSelect(t)}
+          className={`group overflow-hidden rounded-xl border text-left transition-colors ${
+            selectedHex === t.hex
+              ? "border-brand-500 ring-1 ring-brand-500"
+              : "border-border hover:border-border-strong"
+          }`}
+        >
+          <div className="h-14 w-full" style={{ background: t.hex }} />
           <div className="px-2 py-1.5">
-            <div className="truncate text-xs font-medium">{t.name}</div>
-            <div className="font-mono text-[11px] text-zinc-500">{t.hex}</div>
-            <div className="text-[11px] text-zinc-600">{t.usage}%</div>
+            <div className="truncate text-xs font-medium text-fg">{t.name}</div>
+            <div className="font-mono text-[11px] text-muted">{t.hex}</div>
+            <div className="text-[11px] text-faint">{t.usage}%</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ColorDetail({ token }: { token: ColorToken }) {
+  const rgb = token.rgb;
+  return (
+    <div className="rounded-xl border border-border bg-canvas p-4">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 grow-0 rounded-md border border-border" style={{ background: token.hex }} />
+        <div>
+          <div className="text-sm font-semibold text-fg">{token.name}</div>
+          <div className="font-mono text-xs text-muted">
+            {token.hex} · rgb({rgb.r}, {rgb.g}, {rgb.b})
           </div>
         </div>
-      ))}
+        <div className="ml-auto text-right">
+          <div className="text-lg font-bold text-fg">{token.usage}%</div>
+          <div className="text-[11px] text-faint">{token.count} pemakaian</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg border border-border bg-surface p-2">
+          <div className="text-faint">Tipe</div>
+          <div className="text-fg">{token.isNeutral ? "Netral" : token.semantic ? token.semantic : "Primer"}</div>
+        </div>
+        <div className="rounded-lg border border-border bg-surface p-2">
+          <div className="text-faint">Frekuensi</div>
+          <div className="font-mono text-fg">{token.count}x</div>
+        </div>
+      </div>
+
+      {token.sources.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Sumber</div>
+          <div className="flex flex-wrap gap-1">
+            {token.sources.slice(0, 8).map((s) => (
+              <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                {s}
+              </code>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {token.selectors.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Selector</div>
+          <div className="flex flex-wrap gap-1">
+            {token.selectors.slice(0, 12).map((sel) => (
+              <code key={sel} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                {sel}
+              </code>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function ColorsPanel({ result }: { result: DesignModel }) {
   const { colors } = result.tokens;
+  const [selected, setSelected] = useState<ColorToken | null>(null);
   return (
     <>
-      <SectionHeader title="Warna primer" subtitle="Token warna paling sering dipakai" />
-      <ColorGrid tokens={colors.primary} />
-      <SectionHeader title="Warna netral" subtitle="Hitam, putih, abu-abu yang dipakai" />
-      <ColorGrid tokens={colors.neutral} />
+      <SectionHeader title="Warna primer" subtitle="Token warna paling sering dipakai — klik untuk detail & sumber" />
+      <div className="grid gap-4 lg:grid-cols-[1fr,320px]">
+        <div>
+          <ColorGrid tokens={colors.primary} onSelect={setSelected} selectedHex={selected?.hex ?? null} />
+          <SectionHeader title="Warna netral" subtitle="Hitam, putih, abu-abu yang dipakai" />
+          <ColorGrid tokens={colors.neutral} onSelect={setSelected} selectedHex={selected?.hex ?? null} />
+        </div>
+        <div className="lg:sticky lg:top-4">
+          <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">
+            Source Inspector
+          </div>
+          {selected ? (
+            <ColorDetail token={selected} />
+          ) : (
+            <div className="rounded-xl border border-dashed border-border p-4 text-sm text-faint">
+              Pilih token warna untuk melihat nilai, sumber, dan selector yang menggunakannya.
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }
@@ -1078,6 +1170,137 @@ function OverviewPanel({ result, onVoice }: { result: DesignModel; onVoice: () =
   );
 }
 
+function PagesPanel({ result }: { result: DesignModel }) {
+  const pages = result.pages ?? [];
+  const [sel, setSel] = useState(0);
+  const active = pages[sel];
+
+  if (pages.length === 0) {
+    return <p className="text-sm text-muted">Tidak ada data halaman.</p>;
+  }
+
+  const summary = (s: typeof active.scores) =>
+    `Warna ${s.color} · ${s.typography} · R ${s.radius}`;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[280px,1fr]">
+      <div className="flex flex-col gap-1.5">
+        <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">
+          {pages.length} halaman
+        </div>
+        {pages.map((p, i) => (
+          <button
+            key={p.url}
+            onClick={() => setSel(i)}
+            aria-current={i === sel ? "true" : undefined}
+            className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+              i === sel
+                ? "border-brand-500 bg-brand-500/10"
+                : "border-border bg-canvas hover:border-border-strong"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-sm font-medium text-fg">{p.title || p.url}</span>
+              {p.status === "ok" ? (
+                <span className="shrink-0 text-[10px] text-success">ok</span>
+              ) : (
+                <span className="shrink-0 text-[10px] text-danger">error</span>
+              )}
+            </div>
+            <div className="truncate font-mono text-[11px] text-faint">{p.url}</div>
+            <div className="mt-0.5 text-[11px] text-muted">{summary(p.scores)}</div>
+          </button>
+        ))}
+      </div>
+
+      {active && (
+        <div className="rounded-xl border border-border bg-canvas p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-fg">{active.title}</h3>
+              <a
+                href={active.url}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate font-mono text-xs text-faint hover:text-fg"
+              >
+                {active.url}
+              </a>
+            </div>
+            {active.status !== "ok" && active.error && (
+              <span className="rounded-md bg-red-950 px-2 py-1 text-xs text-danger">
+                {active.error}
+              </span>
+            )}
+          </div>
+
+          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {(
+              [
+                ["Warna", active.scores.color],
+                ["Tipografi", active.scores.typography],
+                ["Radius", active.scores.radius],
+                ["Overall", active.scores.overall],
+              ] as Array<[string, number]>
+            ).map(([label, v]) => {
+              const c = ratingColor(v);
+              return (
+                <div key={label} className="rounded-lg border border-border bg-surface p-3">
+                  <div className={`text-lg font-bold ${c.text}`}>{v}</div>
+                  <div className="text-[11px] text-faint">{label}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {active.screenshots.length > 0 && (
+            <div className="mb-4">
+              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Screenshot</div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {active.screenshots.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Screenshot ${active.title} ${i + 1}`}
+                    className="w-full rounded-lg border border-border object-cover"
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">
+              Sumber CSS ({active.sources.length})
+            </div>
+            {active.sources.length === 0 ? (
+              <p className="text-sm text-faint">Tidak ada sumber CSS yang tercatat.</p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {active.sources.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-surface px-3 py-2 text-xs"
+                  >
+                    <span className="max-w-[220px] truncate font-mono text-faint">{s.url}</span>
+                    <span className="rounded bg-canvas px-1.5 py-0.5 text-[10px] text-muted">{s.kind}</span>
+                    <span className="text-faint">
+                      {(s.sizeBytes / 1024).toFixed(1)} KB · {s.ruleCount} rules ·{" "}
+                      {s.declarationCount} decl
+                    </span>
+                    <span className="ml-auto text-faint">akkurasi {s.accuracy}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HealthPanel({ result }: { result: DesignModel }) {
   const health = result.health as HealthReport | null;
   if (!health) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
@@ -1858,7 +2081,10 @@ export function FullReport({
   const tabGroups: Array<{ label: string; items: Array<{ id: Tab; label: string }> }> = [
     {
       label: "Keseluruhan",
-      items: [{ id: "overview", label: "Overview" }],
+      items: [
+        { id: "overview", label: "Overview" },
+        { id: "pages", label: "Pages" },
+      ],
     },
     {
       label: "Tokens",
@@ -1997,6 +2223,7 @@ export function FullReport({
         {tab === "overview" && (
           <OverviewPanel result={result} onVoice={() => setTab("components")} />
         )}
+        {tab === "pages" && <PagesPanel result={result} />}
         {tab === "colors" && <ColorsPanel result={result} />}
         {tab === "typography" && <TypographyPanel result={result} />}
         {tab === "spacing" && <SpacingPanel result={result} />}

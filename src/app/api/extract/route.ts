@@ -58,8 +58,13 @@ export async function POST(req: NextRequest) {
       let hydrated;
       let pageTitle = url;
       if (body.mode === "deep") {
-        const { deepScanStyles } = await import("@/lib/deepscan");
-        const deep = await deepScanStyles(url);
+        let deep;
+        try {
+          const mod = await import("@/lib/deepscan");
+          deep = await mod.deepScanStyles(url);
+        } catch {
+          deep = { title: "", sources: [] };
+        }
         hydrated = deep.sources;
         if (hydrated.length === 0) {
           errors.push({ url, message: "Deep scan tidak menghasilkan stylesheet (browser mungkin belum terinstal)." });

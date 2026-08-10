@@ -23,6 +23,7 @@ import { detectDarkMode } from "./darkmode";
 import { DESIGN_MODEL_SCHEMA_VERSION, TOOL_NAME, TOOL_VERSION } from "./model";
 import type {
   AnalysisScores,
+  AssetSpec,
   BorderToken,
   BreakpointToken,
   ColorToken,
@@ -114,6 +115,7 @@ interface Acc {
 export interface ExtractOptions {
   mode?: ScanMode;
   scope?: ScanScopeRequest;
+  assets?: AssetSpec[];
 }
 
 export function extractDesignSystem(
@@ -659,6 +661,14 @@ export function extractDesignSystem(
 
   const scores = computeScores(stats);
 
+  const sourceUrl = (u: string): boolean => {
+    try {
+      return /^https?:\/\//i.test(new URL(u).protocol);
+    } catch {
+      return false;
+    }
+  };
+
   const page: PageScan = {
     url: pageUrl,
     title: title || pageUrl,
@@ -666,6 +676,15 @@ export function extractDesignSystem(
     sources: audits,
     scores,
     screenshots: [],
+    assets: (opts.assets ?? []).map((a) => {
+      const ext = (a.source.split("?")[0].split(".").pop() ?? "").toLowerCase();
+      return {
+        ...a,
+        page: pageUrl,
+        format: a.format ?? (ext || undefined),
+        isExternal: a.isExternal ?? sourceUrl(a.source),
+      };
+    }),
   };
 
   const statistics: DesignStatistics = {

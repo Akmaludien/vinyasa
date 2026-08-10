@@ -10,6 +10,17 @@ export interface DetectedComponent {
   pages: string[];
 }
 
+export interface ComponentSpec extends DetectedComponent {
+  category: string;
+  humanName?: string;
+  purpose?: string;
+  states?: string[];
+  dimensions?: Record<string, string[]>;
+  responsive?: string[];
+  dependencies?: string[];
+  implementation_hints?: string[];
+}
+
 export interface ComponentReport {
   components: DetectedComponent[];
   patterns: string[];
@@ -86,21 +97,30 @@ export function detectComponents(
     }
   }
 
-  const components: DetectedComponent[] = [];
+  const components: ComponentSpec[] = [];
   for (const [name, g] of grouped) {
     const count = g.selectors.size;
     if (count === 0) continue;
     const props: Record<string, string[]> = {};
     for (const [p, vals] of g.properties) props[p] = [...vals].slice(0, 4);
     const confidence = Math.min(100, Math.round(35 + count * 15 + g.variants.size * 2));
+    const selectors = [...g.selectors].slice(0, 8);
     components.push({
       name,
+      category: categorizeComponent(name),
       confidence,
-      selectors: [...g.selectors].slice(0, 8),
+      selectors,
       count,
       variantCount: g.variants.size,
       properties: props,
       pages: [pageUrl],
+      humanName: humanName(name),
+      purpose: purposeFor(name),
+      states: deriveStates(selectors, props),
+      dimensions: dimensionsFor(props),
+      responsive: responsiveHints(selectors),
+      dependencies: dependenciesFor(name, selectors),
+      implementation_hints: hintsFor(name, count, g.variants.size),
     });
   }
 
@@ -115,4 +135,113 @@ export function detectComponents(
     note:
       "Deteksi berbasis heuristik selector (nama class). Bukan kepastian — interpretasi manual tetap disarankan untuk tata letak yang kompleks.",
   };
+}
+
+const CATEGORY_MAP: Array<[string, string[]]> = [
+  ["Navigation", ["navbar", "header", "nav", "sidebar", "menu", "footer", "breadcrumb", "pagination"]],
+  ["Input", ["input", "form", "field", "search", "select", "dropdown", "searchbox"]],
+  ["Feedback", ["badge", "alert", "notice", "toast", "banner", "modal", "loading", "spinner", "skeleton", "tooltip"]],
+  ["Layout", ["card", "panel", "table", "grid", "section", "hero"]],
+  ["Action", ["button", "tabs", "accordion", "pagination"]],
+  ["Marketing", ["pricing", "price", "plan"]],
+];
+
+export function categorizeComponent(name: string): string {
+  for (const [cat, names] of CATEGORY_MAP) {
+    if (names.includes(name)) return cat;
+  }
+  return "Other";
+}
+
+const PURPOSE_MAP: Array<[string, string]> = [
+  ["button", "Trigger a user action"],
+  ["card", "Group related content in a bordered container"],
+  ["input", "Capture user input"],
+  ["form", "Collect structured data from the user"],
+  ["navbar", "Provide top-level site navigation"],
+  ["footer", "Show page footer / secondary links"],
+  ["badge", "Mark status or short label"],
+  ["alert", "Surface feedback or notification"],
+  ["dropdown", "Reveal a menu on interaction"],
+  ["tabs", "Switch between views"],
+  ["accordion", "Expand/collapse grouped content"],
+  ["modal", "Overlay requiring focus"],
+  ["table", "Display tabular data"],
+  ["hero", "Primary landing section"],
+  ["pricing", "Present pricing tiers"],
+  ["search", "Search within content"],
+  ["sidebar", "Persistent secondary navigation or filters"],
+  ["breadcrumb", "Show page hierarchy"],
+  ["pagination", "Navigate across pages"],
+  ["loading", "Indicate loading state"],
+];
+
+function humanName(name: string): string {
+  return name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function purposeFor(name: string): string | undefined {
+  const found = PURPOSE_MAP.find(([n]) => n === name);
+  return found?.[1];
+}
+
+const STATE_MARKERS = ["hover", "focus", "active", "disabled", "checked", "visited", "placeholder", "focus-within"];
+
+function deriveStates(selectors: string[], props: Record<string, string[]>): string[] {
+  const states = new Set<string>();
+  for (const sel of selectors) {
+    for (const s of STATE_MARKERS) {
+      if (new RegExp(`:${s}(?:\\b|[-:(])`).test(sel)) states.add(s);
+    }
+  }
+  const allSelText = selectors.join(" ");
+  if (/transition|transform|animation/.test(allSelText)) states.add("transition");
+  return [...states];
+}
+
+const DIMENSIONS_PROPS = [
+  ["width", "minWidth", "maxWidth"],
+  ["height", "lineHeight"],
+  ["padding", "margin", "gap"],
+  ["borderRadius"],
+  ["fontSize"],
+];
+
+function dimensionsFor(props: Record<string, string[]>): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
+  for (const key of ["width", "height", "padding", "margin", "gap", "borderRadius", "fontSize", "lineHeight"]) {
+    const vals = props[key];
+    if (vals && vals.length) out[key] = vals.slice(0, 3);
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function responsiveHints(selectors: string[]): string[] {
+  const hints: string[] = [];
+  const text = selectors.join(" ");
+  if (/mobile|sm|--sm|xs|small/.test(text)) hints.push("mobile");
+  if (/tablet|md|--md/.test(text)) hints.push("tablet");
+  if (/desktop|lg|xl|--lg|--xl/.test(text)) hints.push("desktop");
+  return hints;
+}
+
+function dependenciesFor(name: string, selectors: string[]): string[] {
+  const deps: string[] = [];
+  for (const sel of selectors) {
+    for (const [dep, names] of CATEGORY_MAP) {
+      for (const n of names) {
+        if (n !== name && new RegExp(`(^|[-_]|\\s)${n}[-_$]?`, "i").test(sel) && !deps.includes(dep)) {
+          deps.push(dep);
+        }
+      }
+    }
+  }
+  return deps;
+}
+
+function hintsFor(name: string, count: number, variants: number): string[] {
+  const hints: string[] = [];
+  if (variants > 1) hints.push(`Gunakan varian (${variants} terdeteksi) sebagai modifier, bukan duplikasi.`);
+  if (count === 1) hints.push("Muncul sekali — validasi apakah benar komponen atau halaman khusus.");
+  return hints;
 }

@@ -182,6 +182,19 @@ export interface PageScan {
   sources: CssSourceAudit[];
   scores: AnalysisScores;
   screenshots: string[];
+  assets?: AssetSpec[];
+}
+
+export interface AssetSpec {
+  name: string;
+  type: "image" | "icon" | "video" | "audio" | "font";
+  source: string;
+  dimensions?: string;
+  page?: string;
+  component?: string;
+  usage?: string;
+  format?: string;
+  isExternal?: boolean;
 }
 
 export interface DesignTokens {
@@ -259,4 +272,8 @@ export interface ExtractResponse {
   ok: boolean;
   results: DesignModel[];
   errors: ExtractError[];
+  specification?: import("./spec").DesignSpecification;
+  readiness?: import("./readiness").ReadinessResult;
+  project?: import("./project").ProjectRecord;
+  pack?: import("./pack").DesignPack;
 }

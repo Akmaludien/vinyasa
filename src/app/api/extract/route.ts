@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchPageDocs, hydrateSources, isSafeUrl } from "@/lib/fetcher";
+import { fetchPageDocs, hydrateSources, isSafeUrl, type RawAsset } from "@/lib/fetcher";
 import { extractDesignSystem } from "@/lib/extractor";
-import type { DesignModel, DesignStatistics, ExtractResponse, ScanScopeRequest } from "@/lib/model";
+import type { DesignModel, DesignStatistics, ExtractResponse, ScanScopeRequest, AssetSpec } from "@/lib/model";
 import { parseScanScope, discoverUrls } from "@/lib/scan";
+import { buildDesignSpecification } from "@/lib/spec";
+import { computeReadiness } from "@/lib/readiness";
+import { buildDesignPack } from "@/lib/pack";
+import { createProject, addDesignVersion, type ProjectRecord } from "@/lib/project";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -57,13 +61,14 @@ export async function POST(req: NextRequest) {
     try {
       let hydrated;
       let pageTitle = url;
+      let pageAssets: AssetSpec[] | undefined;
       if (body.mode === "deep") {
         let deep;
         try {
           const mod = await import("@/lib/deepscan");
           deep = await mod.deepScanStyles(url);
         } catch {
-          deep = { title: "", sources: [] };
+          deep = { title: "", sources: [], assets: [] };
         }
         hydrated = deep.sources;
         if (hydrated.length === 0) {
@@ -71,18 +76,21 @@ export async function POST(req: NextRequest) {
           continue;
         }
         pageTitle = deep.title || url;
+        pageAssets = deep.assets?.map(rawToAsset) ?? [];
       } else {
-        const { title, sources } = await fetchPageDocs(url);
-        hydrated = await hydrateSources(sources);
+        const doc = await fetchPageDocs(url);
+        hydrated = await hydrateSources(doc.sources);
         if (hydrated.length === 0) {
           errors.push({ url, message: "Tidak ada stylesheet yang bisa dibaca di halaman tersebut" });
           continue;
         }
-        pageTitle = title;
+        pageTitle = doc.title;
+        pageAssets = doc.assets?.map(rawToAsset) ?? [];
       }
       const result = extractDesignSystem(hydrated, url, pageTitle, {
         mode: body.mode ?? "fast",
         scope,
+        assets: pageAssets,
       });
       results.push(result);
     } catch (e) {
@@ -104,7 +112,30 @@ export async function POST(req: NextRequest) {
     results: merged ? [merged] : results,
     errors,
   };
+
+  if (merged && merged !== null) {
+    const specification = buildDesignSpecification(merged);
+    const readiness = computeReadiness(merged);
+    const project = buildProject(merged);
+    response.specification = specification;
+    response.readiness = readiness;
+    response.project = project;
+    response.pack = buildDesignPack(merged, { spec: specification, readiness });
+  }
+
   return NextResponse.json(response);
+}
+
+function buildProject(model: DesignModel): ProjectRecord {
+  const project = createProject({
+    seed: model.source.url,
+    name: model.source.title || model.source.url,
+    description: "Desain diekstrak secara otomatis oleh Vinyasa.",
+    url: model.source.url,
+    title: model.source.title,
+  });
+  addDesignVersion(project, model);
+  return project;
 }
 
 function mergeDesignModels(results: DesignModel[]): DesignModel | null {
@@ -205,5 +236,16 @@ function aggregateTokens(all: TokenSet[]): TokenSet {
     breakpoints: mergeByRaw((t) => t.breakpoints) as TokenSet["breakpoints"],
     durations: mergeByRaw((t) => t.durations) as TokenSet["durations"],
     easings: mergeByRaw((t) => t.easings) as TokenSet["easings"],
+  };
+}
+
+function rawToAsset(a: RawAsset): AssetSpec {
+  return {
+    name: a.name,
+    type: a.type,
+    source: a.source,
+    dimensions: a.dimensionsHint,
+    usage: a.usage,
+    isExternal: true,
   };
 }

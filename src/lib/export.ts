@@ -1,8 +1,9 @@
 import { zipSync, strToU8 } from "fflate";
 import type { DesignModel } from "./model";
 import { buildDesignMd, type MdOptions } from "./design-md";
+import { buildNexoraDesignContextJson } from "./nexora";
 
-export type ExportFormat = "tokens.json" | "tokens.css" | "tailwind.css" | "design.md" | "raw.json" | "readme.md";
+export type ExportFormat = "tokens.json" | "tokens.css" | "tailwind.css" | "design.md" | "raw.json" | "readme.md" | "nexora.json";
 
 export interface ExportSet {
   files: Record<string, string>;
@@ -27,6 +28,7 @@ export function buildExports(m: DesignModel, mdOpts?: MdOptions): ExportSet {
   files["tailwind.css"] = buildTailwindCss(m);
   files["DESIGN.md"] = designMdForExport(m, mdOpts);
   files["raw.json"] = JSON.stringify(m, null, 2);
+  files["nexora.json"] = buildNexoraDesignContextJson(m);
   return { files };
 }
 

@@ -75,9 +75,18 @@ async function fetchCss(href: string, maxBytes = MAX_CSS_BYTES, timeout = FETCH_
   }
 }
 
+export interface RawAsset {
+  name: string;
+  type: "image" | "icon" | "video" | "audio" | "font";
+  source: string;
+  dimensionsHint?: string;
+  usage: string;
+}
+
 export interface PageDocs {
   title: string;
   sources: CssSourceInput[];
+  assets: RawAsset[];
 }
 
 export async function fetchPageDocs(url: string): Promise<PageDocs> {
@@ -150,7 +159,93 @@ export function extractSources(html: string, baseUrl: string): PageDocs {
     });
   }
 
-  return { title, sources: sources.filter((s) => s.content.length > 0 || s.kind === "external") };
+  return { title, sources: sources.filter((s) => s.content.length > 0 || s.kind === "external"), assets: extractAssets(html, base) };
+}
+
+function dedupeAssets(list: RawAsset[]): RawAsset[] {
+  const seen = new Set<string>();
+  const out: RawAsset[] = [];
+  for (const a of list) {
+    if (!a.source) continue;
+    if (seen.has(a.source)) continue;
+    seen.add(a.source);
+    out.push(a);
+  }
+  return out.slice(0, 60);
+}
+
+export function extractAssets(html: string, base: URL): RawAsset[] {
+  const assets: RawAsset[] = [];
+  const abs = (u: string): string => {
+    try {
+      return new URL(u, base).href;
+    } catch {
+      return "";
+    }
+  };
+
+  const imgRe = /<img\b[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = imgRe.exec(html)) !== null) {
+    const tag = m[0];
+    const src = (tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i) ?? [])[1] ?? "";
+    const alt = (tag.match(/\balt\s*=\s*["']([^"']*)["']/i) ?? [])[1] ?? "";
+    if (!src) continue;
+    const u = abs(src);
+    if (!u) continue;
+    const ext = (u.split("?")[0].split(".").pop() ?? "").toLowerCase();
+    if (/^(svg|webp|png|jpe?g|gif|avif|ico)$/.test(ext) || /\.(svg|webp|png|jpe?g|gif|avif)(\?|$)/i.test(u)) {
+      assets.push({
+        name: (u.split("/").pop()?.split("?")[0] ?? "img").slice(0, 80),
+        type: "image",
+        source: u,
+        usage: alt ? `img alt="${alt.slice(0, 40)}"` : "img",
+      });
+    }
+  }
+
+  const iconRe = /<link\b[^>]*rel\s*=\s*["']?([^"'\s>]+)["']?[^>]*>/gi;
+  while ((m = iconRe.exec(html)) !== null) {
+    const tag = m[0];
+    if (!/icon/i.test(m[1] ?? "")) continue;
+    const href = (tag.match(/\bhref\s*=\s*["']([^"']+)["']/i) ?? [])[1] ?? "";
+    const sizes = (tag.match(/\bsizes\s*=\s*["']([^"']+)["']/i) ?? [])[1] ?? "";
+    const u = abs(href);
+    if (!u) continue;
+    assets.push({
+      name: (u.split("/").pop()?.split("?")[0] ?? "icon").slice(0, 80),
+      type: "icon",
+      source: u,
+      dimensionsHint: sizes || undefined,
+      usage: "site icon",
+    });
+  }
+
+  const mediaRe = /<(video|audio|source)\b[^>]*>/gi;
+  while ((m = mediaRe.exec(html)) !== null) {
+    const tag = m[0];
+    const src = (tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i) ?? [])[1] ?? "";
+    if (!src) continue;
+    const u = abs(src);
+    if (!u) continue;
+    assets.push({
+      name: (u.split("/").pop()?.split("?")[0] ?? "media").slice(0, 80),
+      type: tag.toLowerCase().startsWith("<source") ? "video" : tag.toLowerCase().startsWith("<audio")
+        ? "audio"
+        : "video",
+      source: u,
+      usage: tag.toLowerCase().replace(/\s+/g, " ").slice(0, 40),
+    });
+  }
+
+  const ogRe = /<meta\b[^>]*property\s*=\s*["']og:image["'][^>]*content\s*=\s*["']([^"']+)["']/i;
+  const m2 = ogRe.exec(html);
+  if (m2) {
+    const u = abs(m2[1]);
+    if (u) assets.push({ name: "og-image", type: "image", source: u, usage: "social preview" });
+  }
+
+  return dedupeAssets(assets);
 }
 
 export async function hydrateSources(

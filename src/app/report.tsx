@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
 import { buildDesignMd, buildDownloadFilename, type MdOptions, type MdLang } from "@/lib/design-md";
 import { buildPreviewHtml } from "@/lib/preview";
@@ -18,6 +18,9 @@ import { listSessions, saveSession, deleteSession, renameSession, loadSession, c
 import type { ScanSession } from "@/lib/sessions";
 import { useI18n } from "@/lib/i18n";
 import type { DarkModeReport } from "@/lib/darkmode";
+import { buildDesignSpecification } from "@/lib/spec";
+import { computeReadiness } from "@/lib/readiness";
+import { buildDesignPackZip } from "@/lib/pack";
 
 const BASELINE_KEY = "vinyasa-baseline-scan";
 
@@ -56,7 +59,9 @@ type Tab =
   | "audit"
   | "md"
   | "preview"
-  | "ai";
+  | "ai"
+  | "project"
+  | "spec";
 
 function fmtBytes(n: number): string {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MB`;
@@ -1537,17 +1542,37 @@ function ExportPanel({ result }: { result: DesignModel }) {
     URL.revokeObjectURL(url);
   }
 
+  function downloadPackZip() {
+    const { name, data } = buildDesignPackZip(result);
+    const bytes = new Uint8Array(data);
+    const blob = new Blob([bytes], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <>
       <MdControls opts={opts} onChange={setOpts} />
       <div className="mb-4 flex items-center justify-between">
         <SectionHeader title="Artefak design system" subtitle="Berdasarkan DesignModel, bukan output scraper mentah" />
-        <button
-          onClick={downloadZip}
-          className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white"
-        >
-          Download semua (.zip)
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadPackZip}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-400"
+          >
+            Download Design Pack (.zip)
+          </button>
+          <button
+            onClick={downloadZip}
+            className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white"
+          >
+            Download semua (.zip)
+          </button>
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         {Object.entries(files).map(([key]) => (
@@ -1574,6 +1599,184 @@ function ExportPanel({ result }: { result: DesignModel }) {
         ))}
       </div>
     </>
+  );
+}
+
+function SpecPanel({ result }: { result: DesignModel }) {
+  const spec = useMemo(() => buildDesignSpecification(result), [result]);
+  const [showCode, setShowCode] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <SectionHeader
+          title="Design Specification"
+          subtitle="Spesifikasi desain kanonik (nullable output downstream) — bukan artifact scraper mentah"
+        />
+        <button
+          onClick={() => setShowCode((s) => !s)}
+          className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+        >
+          {showCode ? "Lihat ringkasan" : "Lihat JSON"}
+        </button>
+      </div>
+
+      {showCode ? (
+        <pre className="max-h-[28rem] overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300">
+          {JSON.stringify(spec, null, 2)}
+        </pre>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          <SpecBlock title="Sumber">
+            <SpecKV k="URL" v={spec.source.url} />
+            <SpecKV k="Judul" v={spec.source.title} />
+            <SpecKV k="Halaman" v={String(spec.source.pages)} />
+          </SpecBlock>
+          <SpecBlock title="Visual Language">
+            <SpecKV k="Warna primer" v={String(spec.visual_language.colors.primary.length)} />
+            <SpecKV k="Warna netral" v={String(spec.visual_language.colors.neutral.length)} />
+            <SpecKV k="Font family" v={spec.visual_language.typography.families.join(", ") || "—"} />
+            <SpecKV k="Ukuran font" v={String(spec.visual_language.typography.sizes.length)} />
+            <SpecKV k="Dark mode" v={spec.visual_language.darkMode.detected ? "Terdeteksi" : "Tidak terdeteksi"} />
+          </SpecBlock>
+          <SpecBlock title="Layout">
+            <div className="flex flex-wrap gap-1">
+              {spec.layout.containers.length ? (
+                spec.layout.containers.map((c) => <Chip key={c}>{c}</Chip>)
+              ) : (
+                <span className="text-xs text-zinc-500">Tidak ada kontainer terdeteksi</span>
+              )}
+            </div>
+          </SpecBlock>
+          <SpecBlock title="Komponen">
+            <div className="flex flex-wrap gap-1">
+              {spec.components.length ? (
+                spec.components.slice(0, 20).map((c) => <Chip key={c.name}>{c.name}</Chip>)
+              ) : (
+                <span className="text-xs text-zinc-500">Tidak ada komponen terdeteksi</span>
+              )}
+            </div>
+          </SpecBlock>
+          <SpecBlock title="Interaksi">
+            <div className="flex flex-wrap gap-1">
+              {spec.interactions.length ? (
+                spec.interactions.map((i) => <Chip key={i.interaction}>{i.interaction}</Chip>)
+              ) : (
+                <span className="text-xs text-zinc-500">Tidak ada interaksi terdeteksi</span>
+              )}
+            </div>
+          </SpecBlock>
+          <SpecBlock title="Aset">
+            <SpecKV k="Total" v={String(spec.assets.length)} />
+          </SpecBlock>
+          <SpecBlock title="Accessibility (AA)">
+            <SpecKV k="Kritis" v={String(spec.accessibility.wcagAA.critical)} />
+            <SpecKV k="Peringatan" v={String(spec.accessibility.wcagAA.warning)} />
+            <SpecKV k="Lolos" v={String(spec.accessibility.wcagAA.pass)} />
+          </SpecBlock>
+          <SpecBlock title="Implementation Hints">
+            <ul className="flex flex-col gap-1">
+              {spec.implementation_hints.slice(0, 8).map((h) => (
+                <li key={h.code} className="text-xs text-zinc-400">
+                  <span
+                    className={`mr-1.5 rounded px-1 py-0.5 text-[10px] font-semibold ${
+                      h.severity === "critical"
+                        ? "bg-red-500/15 text-red-300"
+                        : h.severity === "warning"
+                          ? "bg-amber-500/15 text-amber-300"
+                          : "bg-zinc-700 text-zinc-300"
+                    }`}
+                  >
+                    {h.severity}
+                  </span>
+                  {h.message}
+                </li>
+              ))}
+            </ul>
+          </SpecBlock>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProjectPanel({ result }: { result: DesignModel }) {
+  const readiness = useMemo(() => computeReadiness(result), [result]);
+  const spec = useMemo(() => buildDesignSpecification(result), [result]);
+
+  const badgeColor =
+    readiness.score >= 80 ? "bg-emerald-500/15 text-emerald-300" : readiness.score >= 50 ? "bg-amber-500/15 text-amber-300" : "bg-red-500/15 text-red-300";
+
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionHeader title="Proyek" subtitle="Informasi proyek desain & kesiapan struktur untuk implementasi (bukan Build-Pack readines)" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <SpecBlock title="Sumber">
+          <SpecKV k="Nama" v={result.source.title} />
+          <SpecKV k="URL" v={result.source.url} />
+          <SpecKV k="Mode scan" v={result.metadata.scanMode} />
+          <SpecKV k="Dibuat" v={new Date(result.metadata.generatedAt).toLocaleString("id-ID")} />
+        </SpecBlock>
+        <SpecBlock title="Status spesifikasi">
+          <SpecKV k="Schema" v={spec.schema} />
+          <SpecKV k="Versi desain" v={spec.design_version} />
+          <SpecKV k="Halaman" v={String(spec.source.pages)} />
+          <SpecKV k="Komponen" v={String(spec.components.length)} />
+        </SpecBlock>
+      </div>
+
+      <div className="rounded-xl border border-zinc-800 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Readiness</h3>
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${badgeColor}`}>
+            {readiness.score}/100
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-zinc-500">{readiness.summary}</p>
+        <div className="mt-4 space-y-2">
+          {readiness.dimensions.map((d) => (
+            <div key={d.key}>
+              <div className="mb-1 flex items-center justify-between text-xs">
+                <span className="text-zinc-300">{d.label}</span>
+                <span className="font-mono text-faint">{d.detail}</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className={`h-full ${
+                    d.ratio >= 0.8 ? "bg-emerald-500" : d.ratio >= 0.4 ? "bg-amber-500" : "bg-red-500"
+                  }`}
+                  style={{ width: `${Math.round(d.ratio * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpecBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 p-4">
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-faint">{title}</h4>
+      <div className="space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+function SpecKV({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-xs text-zinc-500">{k}</span>
+      <span className="truncate font-mono text-xs text-zinc-300">{v}</span>
+    </div>
+  );
+}
+
+function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-md border border-zinc-700 px-2 py-0.5 text-xs text-zinc-300">{children}</span>
   );
 }
 
@@ -2258,6 +2461,13 @@ export function FullReport({
         { id: "preview", label: t("tab.preview") },
       ],
     },
+    {
+      label: "Proyek",
+      items: [
+        { id: "project", label: "Proyek & Readiness" },
+        { id: "spec", label: "Design Spec" },
+      ],
+    },
   ];
 
   return (
@@ -2363,6 +2573,8 @@ export function FullReport({
         {tab === "audit" && <AuditPanel result={result} />}
         {tab === "md" && <MdPanel result={result} />}
         {tab === "preview" && <PreviewPanel result={result} />}
+        {tab === "project" && <ProjectPanel result={result} />}
+        {tab === "spec" && <SpecPanel result={result} />}
         {tab === "ai" && (
           <AiPanel
             result={result}

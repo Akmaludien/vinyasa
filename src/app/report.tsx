@@ -36,6 +36,7 @@ function saveBaseline(m: DesignModel) {
 }
 
 type Tab =
+  | "overview"
   | "colors"
   | "typography"
   | "spacing"
@@ -904,6 +905,179 @@ function DiffPanel({ result }: { result: DesignModel }) {
   );
 }
 
+function ratingColor(v: number): { text: string; bg: string } {
+  if (v >= 80) return { text: "text-success", bg: "bg-emerald-950" };
+  if (v >= 60) return { text: "text-warning", bg: "bg-amber-950" };
+  return { text: "text-danger", bg: "bg-red-950" };
+}
+
+function RatioCard({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: number;
+  note?: string;
+}) {
+  const c = ratingColor(value);
+  return (
+    <div className="rounded-xl border border-border bg-canvas p-4">
+      <div className="flex items-baseline gap-2">
+        <span className={`text-2xl font-bold ${c.text}`}>{value}</span>
+        <span className="text-xs text-faint">/100</span>
+      </div>
+      <div className="mt-1 text-sm font-medium text-fg">{label}</div>
+      {note && <div className="mt-0.5 text-[11px] text-faint">{note}</div>}
+    </div>
+  );
+}
+
+function tokenCounts(m: DesignModel): Array<[string, number]> {
+  const t = m.tokens;
+  const colors = t.colors.primary.length + t.colors.neutral.length + t.colors.hardcoded.length;
+  const typo = t.typography.families.length + t.typography.sizes.length;
+  return [
+    ["Warna", colors],
+    ["Tipografi", typo],
+    ["Spacing", t.spacing.length],
+    ["Radius", t.radius.length],
+    ["Shadow", t.shadows.length],
+    ["Breakpoints", t.breakpoints.length],
+  ];
+}
+
+function OverviewPanel({ result, onVoice }: { result: DesignModel; onVoice: () => void }) {
+  const health = result.health as HealthReport | null;
+  const a11y = result.accessibility as A11yReport | null;
+  const resp = result.responsive as ResponsiveReport | null;
+  const comps = result.components ?? [];
+  const pages = result.pages ?? [];
+  const scan = result.scan;
+
+  const issues: Array<{ severity: "critical" | "warning" | "info" | "suggestion"; text: string }> = [];
+  if (a11y) {
+    for (const i of a11y.issues.slice(0, 4)) issues.push({ severity: i.severity, text: i.message });
+  }
+  if (resp) {
+    for (const i of resp.issues.slice(0, 4)) issues.push({ severity: i.severity, text: i.message });
+  }
+  if (health) {
+    for (const cat of [health.color, health.typography, health.spacing, health.radius, health.component]) {
+      for (const o of cat.outliers.slice(0, 2)) {
+        issues.push({ severity: "warning", text: `${cat.name} outlier: ${o}` });
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-md border border-border bg-canvas px-2 py-1 text-muted">
+            {pages.length} halaman · {scan?.totalRequests ?? pages.length} request
+          </span>
+          <span className="rounded-md border border-border bg-canvas px-2 py-1 text-muted">
+            {result.metadata.scanMode === "deep" ? "Deep Scan" : "Fast Scan"}
+          </span>
+          {result.metadata.generatedAt && (
+            <span className="rounded-md border border-border bg-canvas px-2 py-1 text-faint">
+              {new Date(result.metadata.generatedAt).toLocaleString("id-ID")}
+            </span>
+          )}
+        </div>
+        <h3 className="text-lg font-semibold text-fg">Ringkasan</h3>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <RatioCard label="Design Health" value={health?.overall ?? 0} note="Konsistensi token" />
+        <RatioCard
+          label="Aksesibilitas"
+          value={a11y ? Math.max(0, 100 - a11y.issues.filter((i) => i.severity === "critical").length * 12) : 0}
+          note={`${a11y?.issues.length ?? 0} isu`}
+        />
+        <RatioCard
+          label="Responsif"
+          value={resp ? Math.round((resp.mobile + resp.tablet + resp.desktop) / 3) : 0}
+          note="Mobile / Tablet / Desktop"
+        />
+        <RatioCard
+          label="Komponen"
+          value={Math.min(100, comps.length * 12)}
+          note={`${comps.length} pola terdeteksi`}
+        />
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">Tokens</div>
+        <div className="flex flex-wrap gap-2">
+          {tokenCounts(result).map(([label, n]) => (
+            <span
+              key={label}
+              className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm"
+            >
+              <span className="font-semibold text-fg">{n}</span>{" "}
+              <span className="text-muted">{label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {comps.length > 0 && (
+        <div>
+          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+            Komponen utama
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {comps.slice(0, 8).map((c) => (
+              <button
+                key={c.name}
+                onClick={onVoice}
+                className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-fg transition-colors hover:border-border-strong"
+              >
+                {c.name}
+                <span className="ml-1.5 rounded bg-canvas px-1.5 py-0.5 text-[11px] text-faint">
+                  x{c.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {issues.length > 0 && (
+        <div>
+          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+            Perlu perhatian
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {issues.slice(0, 6).map((iss, i) => (
+              <div
+                key={i}
+                className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
+                  iss.severity === "critical"
+                    ? "border-red-900/50 bg-red-950/30 text-danger"
+                    : iss.severity === "warning"
+                      ? "border-amber-900/40 bg-amber-950/20 text-warning"
+                      : "border-border bg-surface text-muted"
+                }`}
+              >
+                <span aria-hidden className="mt-0.5 select-none">
+                  {iss.severity === "critical" ? "●" : iss.severity === "warning" ? "▲" : "·"}
+                </span>
+                <span>{iss.text}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-faint">
+            Buka tab Aksesibilitas, Responsif, atau Health untuk detail.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HealthPanel({ result }: { result: DesignModel }) {
   const health = result.health as HealthReport | null;
   if (!health) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
@@ -1657,7 +1831,7 @@ export function FullReport({
   onAiConfigChange?: (c: AiConfig | null) => void;
 }) {
   const { t } = useI18n();
-  const [tab, setTab] = useState<Tab>("colors");
+  const [tab, setTab] = useState<Tab>("overview");
   const [activeIndex, setActiveIndex] = useState(0);
   const [aiConfig, setAiConfig] = useState<AiConfig | null>(() =>
     initialAiConfig !== undefined ? initialAiConfig : loadConfig(),
@@ -1681,30 +1855,68 @@ export function FullReport({
 
   if (!result) return null;
 
-  const tabs: Array<{ id: Tab; label: string }> = [
-    { id: "colors", label: t("tab.colors") },
-    { id: "typography", label: t("tab.typography") },
-    { id: "spacing", label: t("tab.spacing") },
-    { id: "shapes", label: t("tab.shapes") },
-    { id: "effects", label: t("tab.effects") },
-    { id: "components", label: t("tab.components") },
-    { id: "responsive", label: t("tab.responsive") },
-    { id: "darkmode", label: t("tab.darkmode") },
-    { id: "playground", label: t("tab.playground") },
-    { id: "diff", label: t("tab.diff") },
-    { id: "history", label: t("tab.history") },
-    { id: "drift", label: "Drift" },
-    { id: "health", label: t("tab.health") },
-    { id: "accessibility", label: t("tab.accessibility") },
-    { id: "export", label: t("tab.export") },
-    { id: "audit", label: t("tab.audit") },
-    { id: "md", label: t("tab.md") },
-    { id: "preview", label: t("tab.preview") },
-    { id: "ai", label: t("tab.ai") },
+  const tabGroups: Array<{ label: string; items: Array<{ id: Tab; label: string }> }> = [
+    {
+      label: "Keseluruhan",
+      items: [{ id: "overview", label: "Overview" }],
+    },
+    {
+      label: "Tokens",
+      items: [
+        { id: "colors", label: t("tab.colors") },
+        { id: "typography", label: t("tab.typography") },
+        { id: "spacing", label: t("tab.spacing") },
+        { id: "shapes", label: t("tab.shapes") },
+        { id: "effects", label: t("tab.effects") },
+      ],
+    },
+    {
+      label: "Components",
+      items: [{ id: "components", label: t("tab.components") }],
+    },
+    {
+      label: "Responsive",
+      items: [
+        { id: "responsive", label: t("tab.responsive") },
+        { id: "darkmode", label: t("tab.darkmode") },
+      ],
+    },
+    {
+      label: "Analysis",
+      items: [
+        { id: "health", label: t("tab.health") },
+        { id: "accessibility", label: t("tab.accessibility") },
+      ],
+    },
+    {
+      label: "AI",
+      items: [{ id: "ai", label: t("tab.ai") }],
+    },
+    {
+      label: "Edit",
+      items: [{ id: "playground", label: t("tab.playground") }],
+    },
+    {
+      label: "Compare",
+      items: [
+        { id: "diff", label: t("tab.diff") },
+        { id: "drift", label: "Drift" },
+        { id: "history", label: t("tab.history") },
+      ],
+    },
+    {
+      label: "Export",
+      items: [
+        { id: "export", label: t("tab.export") },
+        { id: "audit", label: t("tab.audit") },
+        { id: "md", label: t("tab.md") },
+        { id: "preview", label: t("tab.preview") },
+      ],
+    },
   ];
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+<section className="rounded-2xl border border-border bg-surface p-5">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold">{result.source.title}</h2>
@@ -1755,23 +1967,36 @@ export function FullReport({
         ))}
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              tab === t.id
-                ? "bg-zinc-100 font-medium text-zinc-900"
-                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-            }`}
-          >
-            {t.label}
-          </button>
+<div className="mb-5 flex flex-col gap-2">
+        {tabGroups.map((g) => (
+          <div key={g.label} className="flex flex-wrap items-center gap-1.5">
+            <span className="w-20 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-faint">
+              {g.label}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {g.items.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setTab(item.id)}
+                  aria-current={tab === item.id ? "page" : undefined}
+                  className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                    tab === item.id
+                      ? "border-brand-500 bg-brand-500/15 font-medium text-brand-300"
+                      : "border-transparent text-muted hover:bg-surface hover:text-fg"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
 <div className="mt-6">
+        {tab === "overview" && (
+          <OverviewPanel result={result} onVoice={() => setTab("components")} />
+        )}
         {tab === "colors" && <ColorsPanel result={result} />}
         {tab === "typography" && <TypographyPanel result={result} />}
         {tab === "spacing" && <SpacingPanel result={result} />}

@@ -14,9 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vinyasa — Ekstraktor Design System",
+  title: "Vinyasa — Design Intelligence Platform",
   description:
-    "Tempel URL situs apa pun, dapatkan DESIGN.md berisi warna, tipografi, dan radius yang diekstrak dari CSS aslinya.",
+    "Ubah website apa pun menjadi design system yang cerdas, dapat digunakan kembali: token, komponen, health, aksesibilitas, responsif, dan AI.",
+  icons: {
+    icon: "/logo.jpeg",
+    apple: "/logo.jpeg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-950 font-sans text-zinc-100">
+      <body className="min-h-full bg-canvas font-sans text-fg">
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

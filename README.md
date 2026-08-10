@@ -129,7 +129,9 @@ src/
 | 10. AI (Custom provider, chat) | ✅ |
 | 11. Playground | ✅ |
 | 12. Diff | ✅ (baseline vs sekarang) |
-| 13. Dark Mode / Drift | ✅ dark mode; drift = roadmap |
-| 14. Hardening | ✅ SSRF, limits, 38 test, lint/build |
-| 11–13. Playground / Diff / Drift | roadmap |
-| 14. Hardening | di tiap fase |
+| 13. Dark Mode / Drift | ✅ dark mode; drift (timeline otomatis) |
+| 14. Hardening | ✅ SSRF, limits, lint/build |
+| 15. Produk UI (shell, homepage entry, overview) | ✅ |
+| 16. Page Explorer + Source Inspector | ✅ |
+| 17. AI rekomendasi → Playground | ✅ |
+| 18. Ekspor DESIGN.md customizable | ✅ |

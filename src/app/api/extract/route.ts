@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         }
         hydrated = deep.sources;
         if (hydrated.length === 0) {
-          errors.push({ url, message: "Deep scan tidak menghasilkan stylesheet (browser mungkin belum terinstal)." });
+          errors.push({ url, message: "Deep scan tidak menghasilkan stylesheet yang bisa dibaca" });
           continue;
         }
         pageTitle = deep.title || url;

@@ -54,9 +54,9 @@ export async function fetchUrl(url: string): Promise<{ status: number; html: str
   }
 }
 
-async function fetchCss(href: string): Promise<string | null> {
+async function fetchCss(href: string, maxBytes = MAX_CSS_BYTES, timeout = FETCH_TIMEOUT): Promise<string | null> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const res = await fetch(href, {
       headers: { "user-agent": UA },
@@ -67,7 +67,7 @@ async function fetchCss(href: string): Promise<string | null> {
     const buf = await res.arrayBuffer();
     return new TextDecoder("utf-8", { fatal: false })
       .decode(buf)
-      .slice(0, MAX_CSS_BYTES);
+      .slice(0, maxBytes);
   } catch {
     return null;
   } finally {
@@ -99,7 +99,11 @@ export function extractSources(html: string, baseUrl: string): PageDocs {
     const tag = m[0];
     const rel = (tag.match(/\brel\s*=\s*["']([^"']*)["']/i) ?? [])[1] ?? "";
     const href = (tag.match(/\bhref\s*=\s*["']([^"']*)["']/i) ?? [])[1] ?? "";
-    if (rel.toLowerCase().includes("stylesheet") && href) {
+    const as = (tag.match(/\bas\s*=\s*["']([^"']*)["']/i) ?? [])[1] ?? "";
+    const isStyle =
+      rel.toLowerCase().includes("stylesheet") ||
+      (as.toLowerCase() === "style" && href);
+    if (isStyle && href) {
       let abs: string;
       try {
         abs = new URL(href, base).href;
@@ -149,16 +153,22 @@ export function extractSources(html: string, baseUrl: string): PageDocs {
   return { title, sources: sources.filter((s) => s.content.length > 0 || s.kind === "external") };
 }
 
-export async function hydrateSources(sources: CssSourceInput[]): Promise<CssSourceInput[]> {
+export async function hydrateSources(
+  sources: CssSourceInput[],
+  opts: { maxDepth?: number; maxCssBytes?: number; timeout?: number } = {},
+): Promise<CssSourceInput[]> {
   const out: CssSourceInput[] = [];
   const seen = new Set<string>();
+  const maxDepth = opts.maxDepth ?? 3;
+  const maxCssBytes = opts.maxCssBytes ?? MAX_CSS_BYTES;
+  const timeout = opts.timeout ?? FETCH_TIMEOUT;
 
   async function collect(src: CssSourceInput, depth: number) {
-    if (depth > 3) return;
+    if (depth > maxDepth) return;
     if (src.kind === "external") {
       if (seen.has(src.url)) return;
       seen.add(src.url);
-      const css = await fetchCss(src.url);
+      const css = await fetchCss(src.url, maxCssBytes, timeout);
       if (!css) return;
       out.push({ url: src.url, kind: src.kind, content: css });
       for (const imp of expandImports(css, src.url)) {

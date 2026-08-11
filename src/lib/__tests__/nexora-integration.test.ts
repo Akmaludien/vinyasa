@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { DesignSpecification } from "@/lib/spec";
 
 // --- nexora-connection (client state model) -------------------------------
 
@@ -252,3 +253,82 @@ describe("api/nexora/sync", () => {
     expect(json.ok).toBe(false);
   });
 });
+
+// --- E2E: product context -> product-aware adapt round trip ------------------
+
+describe("e2e getProjectContext -> adaptDesign", () => {
+  beforeEach(() => {
+    installLocalStorage();
+    clientMock.getProjectContext.mockReset();
+  });
+
+  it("aligns a design to Nexora product structure from a live project context", async () => {
+    const { adaptDesign } = await import("@/lib/adapt");
+    clientMock.getProjectContext.mockResolvedValue({
+      source: "nexora",
+      projectKey: "shop",
+      projectName: "Shop",
+      structure: {
+        pages: [{ id: "u-1", title: "Buy", kind: "user-flow" }],
+        features: ["Cart", "Checkout"],
+        requirements: ["Fast load"],
+        userFlows: ["Buy"],
+      },
+      context: {
+        schema: "nexora.project-context",
+        version: 1,
+        projectName: "Shop",
+        framework: "next",
+      },
+    });
+
+    const product = await clientMock.getProjectContext("shop");
+    const spec = minimalSpec();
+    const adapted = adaptDesign(spec, product);
+    expect(adapted.product_structure!.features).toEqual(["Cart", "Checkout"]);
+    expect(adapted.context.framework).toBe("next");
+    expect(adapted.components.find((c) => c.name === "pricing")!.selectors[0]).toBe(".cart");
+  });
+});
+
+function minimalSpec(): DesignSpecification {
+  return {
+    design_version: "1.0.0",
+    schema: "design-specification",
+    source: { type: "website", url: "https://design.example/", title: "Fixture", pages: 1 },
+    visual_language: {
+      colors: { primary: [{ name: "c", value: "#2563eb", usage: 1 }], neutral: [] },
+      typography: { families: [], sizes: [], weights: [] },
+      spacing: [],
+      radius: [],
+      shadows: [],
+      borders: [],
+      motion: { durations: [], easings: [] },
+      breakpoints: [],
+      darkMode: { detected: false, variables: [] },
+    },
+    layout: { containers: [], grid: { breakpoints: 0 }, navigation: [], sections: [] },
+    components: [
+      {
+        name: "pricing",
+        category: "Marketing",
+        confidence: 80,
+        selectors: [".pricing"],
+        count: 1,
+        variantCount: 0,
+        properties: {},
+        pages: ["https://design.example/"],
+      },
+    ],
+    pages: [],
+    interactions: [],
+    responsive_rules: [],
+    accessibility: {
+      wcagAA: { critical: 0, warning: 0, pass: 0 },
+      wcagAAA: { critical: 0, warning: 0, pass: 0 },
+      contrastIssues: [],
+    },
+    assets: [],
+    implementation_hints: [],
+  };
+}

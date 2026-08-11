@@ -53,6 +53,43 @@ Website → Discovery → Extraction → Normalization → Canonical Design Mode
 
 **AI (opsional, no-server-key)** — OpenAI / Gemini / Claude / Custom, key di localStorage, generate README/review, **AI Chat streaming (SSE) grounded di DesignModel**, **konteks selektif per bagian**, test connection, auto-switch model saat 429 (transparan).
 
+## Integrasi Nexora (design-context sync)
+
+Vinyasa membaca *Product Context* dari **Nexora** (project identity + product
+intelligence: requirements, features, user flows, arsitektur) dan menulis ulang
+*Design Context* (design system hasil analisis) kembali ke Nexora, sehingga
+design dihasilkan **selaras struktur produk** (bukan struktur website
+referensi). Detail lengkap: lihat `ARCHITECTURE.md` → *Nexora Integration
+Contract*.
+
+Ringkasnya:
+
+- **Koneksi**: set `NEXORA_BASE_URL` (Nexora yang berjalan) dan
+  `NEXORA_INTEGRATION_TOKEN` (nilai SAMA dengan `NEXORA_INTEGRATION_TOKEN` di
+  sisi Nexora). Token hanya dipakai server (`src/lib/nexora-client.ts`), tidak
+  pernah dikirim ke browser.
+- **Endpoint Nexora yang dipakai**:
+  - `GET /api/integration/project?project=<key>` — connect + baca product context
+  - `GET /api/design-context?project=<key>` — baca design context tersimpan
+  - `POST /api/design-context` — tulis design context hasil Vinyasa
+- **Adaptasi product-aware**: `adaptDesign` (`src/lib/adapt.ts`) memakai
+  `NexoraProductContext` (dari `parseNexoraProductContext`) untuk memetakan
+  selector komponen ke halaman/fitur/kebutuhan Nexora, plus stack target
+  (framework/brand/conventions).
+
+Menjalankan dua repo sekaligus (dev lokal):
+
+```bash
+# Terminal 1 — Nexora (http://localhost:3000 default)
+cd ../Nexora && npm install && npm run dev
+
+# Terminal 2 — Vinyasa (gunakan port berbeda, mis. 3001)
+NEXORA_BASE_URL=http://localhost:3000 NEXORA_INTEGRATION_TOKEN=shared-secret npm run dev -- -p 3001
+```
+
+Buka Vinyasa (`http://localhost:3001`), hubungkan project, lalu jalankan
+scan/sinkronisasi. Pastikan token di kedua `.env` identik.
+
 ## Tech stack
 
 - Next.js 16 (App Router, React 19, TypeScript strict, Tailwind v4)
@@ -75,9 +112,9 @@ npx playwright install chromium
 
 Test & verifikasi:
 ```bash
-npm test          # vitest (38 unit test)
-npm run lint      # eslint
+npm test          # vitest (full suite — 14 files / 124 tests)
 npm run build     # production build
+npx tsc --noEmit  # type check (preferred; `npm run lint`/eslint dapat hang di sebagian lingkungan)
 ```
 
 ## Struktur

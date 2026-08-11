@@ -146,7 +146,7 @@ describe("nexoraClient successful requests", () => {
     expect(p.key).toBe("e-commerce");
     expect(p.completeness).toBe(70);
     // request sent to the right path with auth header
-    const [, init] = (vi.mocked(fetch) as any).mock.calls[0] as [string, RequestInit];
+    const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
     expect(init.headers).toMatchObject({ authorization: "Bearer secret" });
     expect(init.cache).toBe("no-store");
   });
@@ -199,7 +199,7 @@ describe("nexoraClient successful requests", () => {
     expect(r.version).toBe(5);
     expect(r.artifactKey).toBe("DESIGN-001");
 
-    const [, init] = (vi.mocked(fetch) as any).mock.calls[0] as [string, RequestInit];
+    const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
     expect(init.method).toBe("POST");
     expect(JSON.parse(String(init.body))).toMatchObject({ projectKey: "e-commerce", source: "VINYASA" });
   });
@@ -214,7 +214,7 @@ describe("nexoraClient.updateDesignContext failure paths (never throws)", () => 
 
   it("returns not_ok for a non-canonical payload", async () => {
     setEnv();
-    const r = await nexoraClient.updateDesignContext("e-commerce", { schema: "nexora.design-context", designSystem: {} } as any);
+    const r = await nexoraClient.updateDesignContext("e-commerce", { schema: "nexora.design-context", designSystem: {} } as unknown as NexoraDesignContext);
     expect(r.ok).toBe(false);
     expect(r.errorKind).toBe("malformed");
   });

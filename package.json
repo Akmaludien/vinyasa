@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:integration-secrets": "node scripts/generate-integration-secrets.mjs"
   },
   "dependencies": {
     "css-tree": "^3.2.1",

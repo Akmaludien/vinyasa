@@ -293,3 +293,18 @@ Actions Secrets; workflow menolak secret kosong atau secret yang sama.
 URL `http`/`https` (`422`). Contract payload tidak berubah. Local
 `VINYASA_PROXY_KEY` hanya berada di ignored `.env.local`; production harus
 memasangnya melalui secret manager/deployment environment.
+
+## Secret generation
+
+Generate server/runtime credentials with:
+
+```bash
+npm run generate:integration-secrets
+```
+
+The command prints two random 256-bit base64url values only; it does not write
+files. Use the same `NEXORA_INTEGRATION_TOKEN` in Nexora and Vinyasa. Use
+`VINYASA_PROXY_KEY` only in Vinyasa server/runtime and GitHub Actions. The
+browser Generate button creates only a local in-memory proxy-key value and
+Copy copies it for operator setup; neither value is persisted or sent to the
+client automatically.

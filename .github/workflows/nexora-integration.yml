@@ -16,6 +16,7 @@ jobs:
       NEXORA_INTEGRATION_TOKEN: ${{ secrets.NEXORA_INTEGRATION_TOKEN }}
       VINYASA_PROXY_KEY: ${{ secrets.VINYASA_PROXY_KEY }}
       NEXORA_BASE_URL: http://127.0.0.1:3421
+      DATABASE_URL: postgresql://nexora:nexora_local_password@127.0.0.1:55432/nexora?schema=public
       E2E_PROJECT: nexora-demo
 
     steps:

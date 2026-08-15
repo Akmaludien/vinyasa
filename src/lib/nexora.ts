@@ -1,4 +1,6 @@
 import type { DesignModel } from "./model";
+import type { AdaptedDesign } from "./adapt";
+import { buildDesignSpecification, type DesignSpecification } from "./spec";
 
 export interface NexoraDesignContext {
   schema: "nexora.design-context";
@@ -18,7 +20,17 @@ export interface NexoraDesignContext {
   };
   health: { overall: number | null };
   accessibility: { critical: number; warning: number; pass: number };
-  components: { total: number };
+  components: { total: number; blocks: DesignModel["components"] };
+  design: {
+    pages: DesignSpecification["pages"];
+    components: DesignSpecification["components"];
+    interactions: DesignSpecification["interactions"];
+    responsiveRules: DesignSpecification["responsive_rules"];
+    layout: DesignSpecification["layout"];
+    visualLanguage: DesignSpecification["visual_language"];
+    implementationHints: DesignSpecification["implementation_hints"];
+    adaptation?: AdaptedDesign;
+  };
 }
 
 const pxOf = (raw: string): number | null => {
@@ -26,7 +38,8 @@ const pxOf = (raw: string): number | null => {
   return px ? Math.round(parseFloat(px[1]) * 100) / 100 : null;
 };
 
-export function buildNexoraDesignContext(m: DesignModel): NexoraDesignContext {
+export function buildNexoraDesignContext(m: DesignModel, specification?: DesignSpecification, adaptation?: AdaptedDesign): NexoraDesignContext {
+  const spec = specification ?? buildDesignSpecification(m);
   const colors = m.tokens.colors.primary.slice(0, 24).map((c) => ({ name: c.name || c.hex, hex: c.hex, usage: c.usage }));
   const neutralColors = m.tokens.colors.neutral.slice(0, 12).map((c) => ({ name: c.name || c.hex, hex: c.hex, usage: c.usage }));
   const fontFamilies = m.tokens.typography.families.slice(0, 8).map((f) => f.raw);
@@ -49,10 +62,20 @@ export function buildNexoraDesignContext(m: DesignModel): NexoraDesignContext {
       warning: Math.min(m.accessibility?.wcagAA.warning ?? 0, 999),
       pass: Math.min(m.accessibility?.wcagAA.pass ?? 0, 9999),
     },
-    components: { total: components },
+    components: { total: components, blocks: m.components },
+    design: {
+      pages: spec.pages,
+      components: spec.components,
+      interactions: spec.interactions,
+      responsiveRules: spec.responsive_rules,
+      layout: spec.layout,
+      visualLanguage: spec.visual_language,
+      implementationHints: spec.implementation_hints,
+      ...(adaptation ? { adaptation } : {}),
+    },
   };
 }
 
-export function buildNexoraDesignContextJson(m: DesignModel): string {
-  return JSON.stringify(buildNexoraDesignContext(m), null, 2);
+export function buildNexoraDesignContextJson(m: DesignModel, spec?: DesignSpecification): string {
+  return JSON.stringify(buildNexoraDesignContext(m, spec), null, 2);
 }

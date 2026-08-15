@@ -77,7 +77,7 @@ function legacyCtx(): AdaptationInput {
 function productCtx(opts?: { prefix?: string }): NexoraProductContext {
   const ctx = parseNexoraProductContext({
     project: { key: "shop", name: "Shop", description: "d" },
-    productContext: {
+    product: {
       features: [{ id: "f-1", title: "Cart" }, { id: "f-2", title: "Checkout" }],
       requirements: [{ id: "r-1", title: "Fast load" }],
       userFlows: [{ id: "u-1", title: "Buy" }],

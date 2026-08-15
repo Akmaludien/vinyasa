@@ -19,6 +19,8 @@ export interface NexoraProductContext {
   projectKey: string;
   projectName: string;
   description?: string;
+  complexity?: string;
+  completeness?: number;
   structure: ProductStructure;
   context: NexoraProjectContext;
 }
@@ -51,7 +53,7 @@ export function parseNexoraProductContext(raw: unknown): NexoraProductContext | 
   const projectName = str(project.name);
   if (!projectKey || !projectName) return null;
 
-  const pc = (o.productContext ?? {}) as Record<string, unknown>;
+  const pc = (o.product ?? {}) as Record<string, unknown>;
 
   const pages = [
     ...artifactItems(pc.userFlows).map((a) => ({ ...a, kind: "user-flow" })),
@@ -72,6 +74,8 @@ export function parseNexoraProductContext(raw: unknown): NexoraProductContext | 
     projectKey,
     projectName,
     description: str(project.description) || undefined,
+    complexity: str(project.complexity) || undefined,
+    completeness: typeof project.completeness === "number" ? project.completeness : undefined,
     structure: {
       pages,
       features: artifactItems(pc.features).map((a) => a.title),

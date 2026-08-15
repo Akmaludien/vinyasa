@@ -5,18 +5,53 @@ import {
 } from "@/lib/nexora-client";
 import { isCanonicalDesignContext } from "@/lib/validate-design-context";
 import type { NexoraDesignContext } from "@/lib/nexora";
+import { authorizeNexoraProxy, denialMessage } from "@/lib/nexora-route-security";
 
 export const runtime = "nodejs";
 
+const MAX_SYNC_BODY_BYTES = 2 * 1024 * 1024;
+
+function isSafeSourceUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Server-to-server sync endpoint. The integration token lives only in the
- * Nexora env and is injected here; the client only sends the project key and
- * the bounded design-context payload.
+ * Vinyasa server env and is injected by `nexoraClient`; the client sends the
+ * project key, the bounded design-context payload, and the Vinyasa proxy
+ * access key.
+ *
+ * `sourceUrl` has a single source of truth: `payload.sourceUrl`. A request-level
+ * `sourceUrl` is accepted only when it agrees with the payload — a mismatch is
+ * rejected rather than silently resolved.
  */
 export async function POST(request: NextRequest) {
+  const authz = authorizeNexoraProxy(request);
+  if (!authz.ok) {
+    return NextResponse.json({ ok: false, error: denialMessage(authz) }, { status: authz.status });
+  }
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_SYNC_BODY_BYTES) {
+    return NextResponse.json(
+      { ok: false, error: "Payload sync terlalu besar." },
+      { status: 413 },
+    );
+  }
   let body: { projectKey?: unknown; payload?: unknown; sourceUrl?: unknown; source?: unknown };
   try {
-    body = await request.json();
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).byteLength > MAX_SYNC_BODY_BYTES) {
+      return NextResponse.json(
+        { ok: false, error: "Payload sync terlalu besar." },
+        { status: 413 },
+      );
+    }
+    body = JSON.parse(raw) as typeof body;
   } catch {
     return NextResponse.json(
       { ok: false, error: "Body JSON tidak valid." },
@@ -40,7 +75,21 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = body.payload as NexoraDesignContext;
-  const sourceUrl = typeof body.sourceUrl === "string" && body.sourceUrl ? body.sourceUrl : payload.sourceUrl;
+  if (!isSafeSourceUrl(payload.sourceUrl)) {
+    return NextResponse.json(
+      { ok: false, error: "payload.sourceUrl harus berupa URL http/https yang valid." },
+      { status: 422 },
+    );
+  }
+  // Canonical: the payload owns sourceUrl. A request-level value may only
+  // confirm it.
+  if (typeof body.sourceUrl === "string" && body.sourceUrl && body.sourceUrl !== payload.sourceUrl) {
+    return NextResponse.json(
+      { ok: false, error: "sourceUrl request tidak cocok dengan payload.sourceUrl." },
+      { status: 400 },
+    );
+  }
+  const sourceUrl = payload.sourceUrl;
   const source = body.source === "MANUAL" ? "MANUAL" : "VINYASA";
 
   const result: DesignSyncResult = await nexoraClient.updateDesignContext(

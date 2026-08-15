@@ -20,8 +20,10 @@ describe("parseNexoraProductContext", () => {
 
   it("parses a full product context and orders pages by artifact kind", () => {
     const raw = {
+      schema_version: "1.0",
+      project_id: "e-commerce",
       project: { key: "e-commerce", name: "E-Commerce", description: "d" },
-      productContext: {
+      product: {
         userFlows: [{ id: "uf-1", title: "Checkout", kind: "flow" }],
         features: [{ id: "f-1", title: "Cart" }],
         userStories: [{ id: "us-1", title: "Add item" }],
@@ -57,7 +59,7 @@ describe("parseNexoraProductContext", () => {
   it("drops artifacts without an id and skips non-string fields", () => {
     const raw = {
       project: { key: "p", name: "P" },
-      productContext: {
+      product: {
         userFlows: [{ title: "no-id" }, { id: "ok", title: "OK", kind: 99 }],
         features: [{ id: "", title: "empty id" }, "not-an-object", null],
         requirements: [{ id: "r", title: "" }],
@@ -75,7 +77,7 @@ describe("parseNexoraProductContext", () => {
     const many = Array.from({ length: 75 }, (_, i) => ({ id: `id-${i}`, title: `T${i}` }));
     const ctx = parseNexoraProductContext({
       project: { key: "p", name: "P" },
-      productContext: { userFlows: many },
+      product: { userFlows: many },
     });
     expect(ctx!.structure.pages.length).toBe(60);
   });
@@ -84,5 +86,37 @@ describe("parseNexoraProductContext", () => {
     const ctx = parseNexoraProductContext({ project: { key: "p", name: "P" } });
     expect(ctx!.description).toBeUndefined();
     expect(ctx!.context.designerNote).toBeUndefined();
+  });
+
+  it("keeps project.key as the canonical id even when project_id disagrees", () => {
+    const ctx = parseNexoraProductContext({
+      schema_version: "1.0",
+      project_id: "stale-id",
+      project: { key: "shop", name: "Shop" },
+      product: {},
+    });
+    expect(ctx!.projectKey).toBe("shop");
+    expect(ctx!.context.projectId).toBe("shop");
+  });
+
+  it("carries complexity and completeness from the project envelope", () => {
+    const ctx = parseNexoraProductContext({
+      project: { key: "shop", name: "Shop", complexity: "medium", completeness: 70 },
+      product: {},
+    });
+    expect(ctx!.complexity).toBe("medium");
+    expect(ctx!.completeness).toBe(70);
+    const bare = parseNexoraProductContext({ project: { key: "shop", name: "Shop", completeness: "70" } });
+    expect(bare!.complexity).toBeUndefined();
+    expect(bare!.completeness).toBeUndefined();
+  });
+
+  it("ignores the legacy `productContext` field (no fallback)", () => {
+    const ctx = parseNexoraProductContext({
+      project: { key: "shop", name: "Shop" },
+      productContext: { features: [{ id: "f-1", title: "Cart" }] },
+    });
+    expect(ctx!.structure.features).toEqual([]);
+    expect(ctx!.structure.pages).toEqual([]);
   });
 });

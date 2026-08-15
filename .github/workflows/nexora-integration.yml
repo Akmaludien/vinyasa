@@ -63,6 +63,7 @@ jobs:
             sleep 2
           done
           (echo > /dev/tcp/127.0.0.1/55432) 2>/dev/null
+          npx prisma generate
           npx prisma migrate deploy
 
       - name: Start Nexora

@@ -66,6 +66,7 @@ jobs:
           (echo > /dev/tcp/127.0.0.1/55432) 2>/dev/null
           npx prisma generate
           npx prisma migrate deploy
+          npm run db:seed
 
       - name: Start Nexora
         shell: bash

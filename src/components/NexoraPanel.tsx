@@ -66,11 +66,33 @@ export function NexoraPanel({ result }: { result: DesignModel }) {
   // Vinyasa proxy access key. Held in component state only — never persisted to
   // localStorage and never sent anywhere but the same-origin proxy routes.
   const [proxyKey, setProxyKey] = useState("");
+  const [proxyKeyMessage, setProxyKeyMessage] = useState("");
 
   const proxyHeaders = useMemo(
     () => ({ "x-vinyasa-proxy-key": proxyKey }),
     [proxyKey],
   );
+
+  function generateProxyKey() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const generated = btoa(String.fromCharCode(...bytes))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    setProxyKey(generated);
+    setProxyKeyMessage("Key dibuat lokal. Simpan ke VINYASA_PROXY_KEY di server.");
+  }
+
+  async function copyProxyKey() {
+    if (!proxyKey) return;
+    try {
+      await navigator.clipboard.writeText(proxyKey);
+      setProxyKeyMessage("Key disalin. Jangan kirim ke client atau commit ke Git.");
+    } catch {
+      setProxyKeyMessage("Clipboard tidak tersedia. Salin key secara manual.");
+    }
+  }
 
   const syncPayload = useMemo(() => {
     try {
@@ -221,18 +243,39 @@ export function NexoraPanel({ result }: { result: DesignModel }) {
         >
           Vinyasa proxy access key
         </label>
-        <input
-          id="vinyasa-proxy-key"
-          type="password"
-          autoComplete="off"
-          value={proxyKey}
-          onChange={(e) => setProxyKey(e.target.value)}
-          placeholder="VINYASA_PROXY_KEY"
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-brand-500"
-        />
+        <div className="flex flex-wrap gap-2">
+          <input
+            id="vinyasa-proxy-key"
+            type="password"
+            autoComplete="off"
+            value={proxyKey}
+            onChange={(e) => {
+              setProxyKey(e.target.value);
+              setProxyKeyMessage("");
+            }}
+            placeholder="VINYASA_PROXY_KEY"
+            className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-brand-500"
+          />
+          <button
+            type="button"
+            onClick={generateProxyKey}
+            className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 hover:border-zinc-500"
+          >
+            Generate
+          </button>
+          <button
+            type="button"
+            onClick={copyProxyKey}
+            disabled={!proxyKey}
+            className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 hover:border-zinc-500 disabled:opacity-50"
+          >
+            Copy
+          </button>
+        </div>
         <p className="mt-2 text-[11px] text-zinc-500">
-          Wajib untuk semua panggilan proxy Nexora. Hanya disimpan di memori sesi ini.
+          Generate dibuat lokal. Simpan nilai yang sama sebagai <code className="text-zinc-400">VINYASA_PROXY_KEY</code> di server. Key tidak masuk localStorage.
         </p>
+        {proxyKeyMessage && <p className="mt-1 text-[11px] text-amber-300">{proxyKeyMessage}</p>}
       </div>
 
       {conn.projectKey ? (

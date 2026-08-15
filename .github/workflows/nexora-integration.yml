@@ -1,0 +1,116 @@
+name: Vinyasa-Nexora Integration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: vinyasa-nexora-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      NEXORA_INTEGRATION_TOKEN: ${{ secrets.NEXORA_INTEGRATION_TOKEN }}
+      VINYASA_PROXY_KEY: ${{ secrets.VINYASA_PROXY_KEY }}
+      NEXORA_BASE_URL: http://127.0.0.1:3421
+      DATABASE_URL: postgresql://nexora:nexora_local_password@127.0.0.1:55432/nexora?schema=public
+      E2E_PROJECT: nexora-demo
+
+    steps:
+      - name: Checkout Vinyasa
+        uses: actions/checkout@v4
+        with:
+          path: vinyasa
+
+      - name: Checkout Nexora
+        uses: actions/checkout@v4
+        with:
+          repository: Akmaludien/nexora
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
+          path: nexora
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            vinyasa/package-lock.json
+            nexora/package-lock.json
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          npm ci --prefix nexora
+          npm ci --prefix vinyasa
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          test -n "$NEXORA_INTEGRATION_TOKEN"
+          test -n "$VINYASA_PROXY_KEY"
+          test "$NEXORA_INTEGRATION_TOKEN" != "$VINYASA_PROXY_KEY"
+
+      - name: Start Nexora embedded PostgreSQL
+        shell: bash
+        working-directory: nexora
+        run: |
+          DATABASE_URL="postgresql://nexora:nexora_local_password@127.0.0.1:55432/nexora?schema=public" npm run db:dev > ../nexora-db.log 2>&1 &
+          for i in {1..60}; do
+            if (echo > /dev/tcp/127.0.0.1/55432) 2>/dev/null; then break; fi
+            sleep 2
+          done
+          (echo > /dev/tcp/127.0.0.1/55432) 2>/dev/null
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: Start Nexora
+        shell: bash
+        working-directory: nexora
+        run: |
+          NEXORA_INTEGRATION_TOKEN="$NEXORA_INTEGRATION_TOKEN" npm run dev -- -p 3421 -H 127.0.0.1 > ../nexora.log 2>&1 &
+          for i in {1..60}; do
+            curl --silent --fail http://127.0.0.1:3421/ >/dev/null && break
+            sleep 2
+          done
+          curl --silent --fail http://127.0.0.1:3421/ >/dev/null
+
+      - name: Run Nexora integration gates
+        shell: bash
+        working-directory: nexora
+        run: npm test -- --run && npm run typecheck && npm run build && npm run test:http
+
+      - name: Start Vinyasa
+        shell: bash
+        working-directory: vinyasa
+        run: |
+          NEXORA_BASE_URL="$NEXORA_BASE_URL" NEXORA_INTEGRATION_TOKEN="$NEXORA_INTEGRATION_TOKEN" VINYASA_PROXY_KEY="$VINYASA_PROXY_KEY" npm run dev -- -p 3401 -H 127.0.0.1 > ../vinyasa.log 2>&1 &
+          for i in {1..60}; do
+            curl --silent --fail http://127.0.0.1:3401/ >/dev/null && break
+            sleep 2
+          done
+          curl --silent --fail http://127.0.0.1:3401/ >/dev/null
+
+      - name: Run Vinyasa gates
+        shell: bash
+        working-directory: vinyasa
+        run: |
+          npm test -- --run
+          npm exec tsc -- --noEmit
+          npm run build
+          VINYASA_BASE_URL=http://127.0.0.1:3401 node scripts/verify-nexora-http.mjs
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexora-integration-logs
+          path: |
+            nexora.log
+            vinyasa.log
+            nexora-db.log
+          if-no-files-found: ignore

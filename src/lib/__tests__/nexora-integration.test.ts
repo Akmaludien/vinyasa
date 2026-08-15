@@ -131,22 +131,144 @@ import { GET as connectGET } from "@/app/api/nexora/connect/route";
 import { POST as syncPOST } from "@/app/api/nexora/sync/route";
 import { NextRequest } from "next/server";
 
-function getReq(url = "http://localhost/api/nexora/connect?project=e-commerce-api") {
-  return new NextRequest(url, { method: "GET" });
+const PROXY_KEY = "proxy-key-abcdef";
+
+/** Headers a legitimate same-origin authenticated Vinyasa caller sends. */
+function authHeaders(extra: Record<string, string> = {}) {
+  return {
+    "x-vinyasa-proxy-key": PROXY_KEY,
+    origin: "http://localhost",
+    "sec-fetch-site": "same-origin",
+    ...extra,
+  };
 }
 
-function postReq(body: unknown) {
+function getReq(
+  url = "http://localhost/api/nexora/connect?project=e-commerce-api",
+  headers: Record<string, string> = authHeaders(),
+) {
+  return new NextRequest(url, { method: "GET", headers });
+}
+
+function postReq(body: unknown, headers: Record<string, string> = authHeaders()) {
   return new NextRequest("http://localhost/api/nexora/sync", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 }
 
+/** Env every protected-route test needs: Nexora reachable + proxy key set. */
+function installProxyEnv() {
+  process.env.NEXORA_BASE_URL = "https://nexora.test";
+  process.env.NEXORA_INTEGRATION_TOKEN = "integration-secret";
+  process.env.VINYASA_PROXY_KEY = PROXY_KEY;
+}
+
+describe("api/nexora proxy guard matrix", () => {
+  beforeEach(() => {
+    installLocalStorage();
+    installProxyEnv();
+    clientMock.getProjectContext.mockReset();
+    clientMock.updateDesignContext.mockReset();
+  });
+
+  const canonicalPayload = {
+    schema: "nexora.design-context",
+    sourceUrl: "https://example.com",
+    designSystem: { colors: [{ name: "x", hex: "#000", usage: 1 }], neutralColors: [], fontFamilies: ["Inter"] },
+  };
+
+  it("denies anonymous connect (no session, no origin)", async () => {
+    const res = await connectGET(getReq(undefined, {}));
+    expect(res.status).toBe(401);
+    expect(clientMock.getProjectContext).not.toHaveBeenCalled();
+  });
+
+  it("denies anonymous connect even on the same origin", async () => {
+    const res = await connectGET(
+      getReq(undefined, { origin: "http://localhost", "sec-fetch-site": "same-origin" }),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("denies anonymous sync", async () => {
+    const res = await syncPOST(postReq({ projectKey: "api", payload: canonicalPayload }, {}));
+    expect(res.status).toBe(401);
+    expect(clientMock.updateDesignContext).not.toHaveBeenCalled();
+  });
+
+  it("denies an invalid proxy key", async () => {
+    const res = await connectGET(getReq(undefined, authHeaders({ "x-vinyasa-proxy-key": "wrong-key-abcdef" })));
+    expect(res.status).toBe(401);
+  });
+
+  it("denies a cross-site mutation even with a valid key", async () => {
+    const res = await syncPOST(
+      postReq(
+        { projectKey: "api", payload: canonicalPayload },
+        authHeaders({ origin: "https://evil.test", "sec-fetch-site": "cross-site" }),
+      ),
+    );
+    expect(res.status).toBe(403);
+    expect(clientMock.updateDesignContext).not.toHaveBeenCalled();
+  });
+
+  it("returns 503 when the server has no proxy key configured", async () => {
+    delete process.env.VINYASA_PROXY_KEY;
+    const res = await connectGET(getReq());
+    expect(res.status).toBe(503);
+  });
+
+  it("never echoes a credential in a denial response", async () => {
+    const res = await connectGET(getReq(undefined, {}));
+    const text = JSON.stringify(await res.json());
+    expect(text).not.toContain(PROXY_KEY);
+    expect(text).not.toContain("integration-secret");
+  });
+
+  it("allows an authenticated same-origin connect", async () => {
+    clientMock.getProjectContext.mockResolvedValue({
+      source: "nexora",
+      projectKey: "e-commerce-api",
+      projectName: "E-Commerce API",
+      structure: { pages: [], features: [], requirements: [], userFlows: [] },
+      context: { schema: "nexora.project-context", version: 1, projectName: "E-Commerce API" },
+    });
+    const res = await connectGET(getReq());
+    expect(res.status).toBe(200);
+  });
+
+  it("allows an authenticated same-origin sync", async () => {
+    clientMock.updateDesignContext.mockResolvedValue({ ok: true, version: 1 });
+    const res = await syncPOST(postReq({ projectKey: "api", payload: canonicalPayload }));
+    expect(res.status).toBe(200);
+  });
+
+  it("maps an invalid project key to 400 for an authenticated caller", async () => {
+    const res = await connectGET(getReq("http://localhost/api/nexora/connect?project=BAD%20KEY"));
+    expect(res.status).toBe(400);
+  });
+
+  it("maps a malformed payload to 422 for an authenticated caller", async () => {
+    const res = await syncPOST(
+      postReq({ projectKey: "api", payload: { schema: "nexora.design-context", designSystem: {} } }),
+    );
+    expect(res.status).toBe(422);
+  });
+
+  it("maps Nexora unavailability to 502 for an authenticated caller", async () => {
+    clientMock.updateDesignContext.mockResolvedValue({ ok: false, errorKind: "unavailable", error: "down" });
+    const res = await syncPOST(postReq({ projectKey: "api", payload: canonicalPayload }));
+    expect(res.status).toBe(502);
+  });
+});
+
 describe("api/nexora/connect", () => {
   beforeEach(() => {
     installLocalStorage();
-    clientMock.getProject.mockReset();
+    installProxyEnv();
+    clientMock.getProjectContext.mockReset();
   });
 
   it("rejects a missing/invalid project key", async () => {
@@ -162,12 +284,15 @@ describe("api/nexora/connect", () => {
   });
 
   it("returns project info on success", async () => {
-    clientMock.getProject.mockResolvedValue({
-      key: "e-commerce-api",
-      name: "E-Commerce API",
+    clientMock.getProjectContext.mockResolvedValue({
+      source: "nexora",
+      projectKey: "e-commerce-api",
+      projectName: "E-Commerce API",
       description: "desc",
       complexity: "medium",
       completeness: 70,
+      structure: { pages: [], features: [], requirements: [], userFlows: [] },
+      context: { schema: "nexora.project-context", version: 1, projectName: "E-Commerce API" },
     });
     const res = await connectGET(getReq());
     expect(res.status).toBe(200);
@@ -178,14 +303,14 @@ describe("api/nexora/connect", () => {
 
   it("maps not-found errors to 404", async () => {
     const { NexoraError } = await import("@/lib/nexora-client");
-    clientMock.getProject.mockRejectedValue(new NexoraError("not_found", "nope"));
+    clientMock.getProjectContext.mockRejectedValue(new NexoraError("not_found", "nope"));
     const res = await connectGET(getReq());
     expect(res.status).toBe(404);
   });
 
   it("maps not-configured errors to 503", async () => {
     const { NexoraError } = await import("@/lib/nexora-client");
-    clientMock.getProject.mockRejectedValue(new NexoraError("not_configured", "none"));
+    clientMock.getProjectContext.mockRejectedValue(new NexoraError("not_configured", "none"));
     const res = await connectGET(getReq());
     expect(res.status).toBe(503);
   });
@@ -194,12 +319,15 @@ describe("api/nexora/connect", () => {
 describe("api/nexora/sync", () => {
   beforeEach(() => {
     installLocalStorage();
+    installProxyEnv();
     clientMock.getProject.mockReset();
+    clientMock.updateDesignContext.mockReset();
   });
 
   it("rejects invalid body JSON", async () => {
     const req = new NextRequest("http://localhost/api/nexora/sync", {
       method: "POST",
+      headers: authHeaders(),
       body: "{not-json",
     });
     const res = await syncPOST(req);
@@ -214,6 +342,39 @@ describe("api/nexora/sync", () => {
   it("rejects a non-canonical design payload", async () => {
     const res = await syncPOST(postReq({ projectKey: "api", payload: { schema: "nexora.design-context", designSystem: {} } }));
     expect(res.status).toBe(422);
+  });
+
+  it("rejects a sync body over the size limit", async () => {
+    const res = await syncPOST(
+      postReq(
+        {
+          projectKey: "api",
+          payload: {
+            schema: "nexora.design-context",
+            sourceUrl: "https://example.com",
+            designSystem: { colors: [{ name: "x", hex: "#000", usage: 1 }], fontFamilies: ["Inter"] },
+          },
+        },
+        { ...authHeaders(), "content-length": String(2 * 1024 * 1024 + 1) },
+      ),
+    );
+    expect(res.status).toBe(413);
+    expect(clientMock.updateDesignContext).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-http sourceUrl", async () => {
+    const res = await syncPOST(
+      postReq({
+        projectKey: "api",
+        payload: {
+          schema: "nexora.design-context",
+          sourceUrl: "file:///etc/passwd",
+          designSystem: { colors: [{ name: "x", hex: "#000", usage: 1 }], fontFamilies: ["Inter"] },
+        },
+      }),
+    );
+    expect(res.status).toBe(422);
+    expect(clientMock.updateDesignContext).not.toHaveBeenCalled();
   });
 
   it("rejects an empty design payload (no colors/fonts)", async () => {
@@ -251,6 +412,41 @@ describe("api/nexora/sync", () => {
     expect(res.status).toBe(502);
     const json = await res.json();
     expect(json.ok).toBe(false);
+  });
+
+  // --- sourceUrl semantics: the payload is the single source of truth --------
+
+  const payloadWithSource = {
+    schema: "nexora.design-context",
+    sourceUrl: "https://payload.example/",
+    designSystem: { colors: [{ name: "x", hex: "#000", usage: 1 }], neutralColors: [], fontFamilies: ["Inter"] },
+  };
+
+  it("echoes payload.sourceUrl when the request omits sourceUrl", async () => {
+    clientMock.updateDesignContext.mockResolvedValue({ ok: true, version: 1 });
+    const res = await syncPOST(postReq({ projectKey: "api", payload: payloadWithSource }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).sourceUrl).toBe("https://payload.example/");
+    // The forwarded payload keeps its own sourceUrl untouched.
+    const [, forwarded] = clientMock.updateDesignContext.mock.calls[0];
+    expect(forwarded.sourceUrl).toBe("https://payload.example/");
+  });
+
+  it("accepts a request sourceUrl that matches the payload", async () => {
+    clientMock.updateDesignContext.mockResolvedValue({ ok: true, version: 1 });
+    const res = await syncPOST(
+      postReq({ projectKey: "api", payload: payloadWithSource, sourceUrl: "https://payload.example/" }),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).sourceUrl).toBe("https://payload.example/");
+  });
+
+  it("rejects a request sourceUrl that disagrees with the payload", async () => {
+    const res = await syncPOST(
+      postReq({ projectKey: "api", payload: payloadWithSource, sourceUrl: "https://spoofed.example/" }),
+    );
+    expect(res.status).toBe(400);
+    expect(clientMock.updateDesignContext).not.toHaveBeenCalled();
   });
 });
 

@@ -35,8 +35,10 @@ const validProjectEnvelope = {
 };
 
 const validContextEnvelope = {
+  schema_version: "1.0",
+  project_id: "e-commerce",
   project: { key: "e-commerce", name: "E-Commerce", description: "desc" },
-  productContext: {
+  product: {
     userFlows: [{ id: "uf-1", title: "Checkout" }],
     features: [{ id: "f-1", title: "Cart" }],
     requirements: [{ id: "r-1", title: "Req" }],
@@ -61,7 +63,26 @@ function canonicalDesign(): NexoraDesignContext {
     },
     health: { overall: 80 },
     accessibility: { critical: 0, warning: 0, pass: 0 },
-    components: { total: 1 },
+    components: { total: 1, blocks: [] },
+    design: {
+      pages: [],
+      components: [],
+      interactions: [],
+      responsiveRules: [],
+      layout: { containers: [], grid: { breakpoints: 0 }, navigation: [], sections: [] },
+      visualLanguage: {
+        colors: { primary: [], neutral: [] },
+        typography: { families: [], sizes: [], weights: [] },
+        spacing: [],
+        radius: [],
+        shadows: [],
+        borders: [],
+        motion: { durations: [], easings: [] },
+        breakpoints: [],
+        darkMode: { detected: false, variables: [] },
+      },
+      implementationHints: [],
+    },
   };
 }
 

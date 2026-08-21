@@ -44,4 +44,3 @@ next-env.d.ts
 # misc tooling
 *.log
 *.pid
-graphify-out/

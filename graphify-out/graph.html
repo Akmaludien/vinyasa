@@ -1,0 +1,101 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Dependency graph - Vinyasa (design-md)</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>body{font-family:system-ui;margin:24px}pre{background:#f6f8fa;padding:16px;overflow:auto}</style>
+</head><body>
+<h1>Dependency graph - Vinyasa (design-md) (2026-08-15)</h1>
+<p>Top hubs + integration subgraph. Full data: <code>graph.json</code> in this folder. Mermaid CDN requires network.</p>
+<pre class="mermaid">
+graph TD
+n0_model.ts["src/lib/model.ts"]
+n1_extractor.ts["src/lib/extractor.ts"]
+n2_report.tsx["src/app/report.tsx"]
+n3_spec.ts["src/lib/spec.ts"]
+n4_nexora.ts["src/lib/nexora.ts"]
+n5_route.ts["src/app/api/extract/route.ts"]
+n6_adapt.ts["src/lib/adapt.ts"]
+n7_export.ts["src/lib/export.ts"]
+n8_nexora.test.ts["src/lib/__tests__/nexora.test.ts"]
+n9_pack.test.ts["src/lib/__tests__/pack.test.ts"]
+n10_fetcher.ts["src/lib/fetcher.ts"]
+n11_pack.ts["src/lib/pack.ts"]
+n12_generate-integration-secrets.mjs["scripts/generate-integration-secrets.mjs"]
+n13_verify-nexora-http.mjs["scripts/verify-nexora-http.mjs"]
+n14_route.ts["src/app/api/nexora/connect/route.ts"]
+n15_route.ts["src/app/api/nexora/sync/route.ts"]
+n16_NexoraPanel.tsx["src/components/NexoraPanel.tsx"]
+n17_nexora-client.ts["src/lib/nexora-client.ts"]
+n18_nexora-config.ts["src/lib/nexora-config.ts"]
+n19_nexora-connection.ts["src/lib/nexora-connection.ts"]
+n20_nexora-product-context.ts["src/lib/nexora-product-context.ts"]
+n21_nexora-route-security.ts["src/lib/nexora-route-security.ts"]
+n22_validate-design-context.ts["src/lib/validate-design-context.ts"]
+n23_nexora-client.test.ts["src/lib/__tests__/nexora-client.test.ts"]
+n24_nexora-integration.test.ts["src/lib/__tests__/nexora-integration.test.ts"]
+n25_nexora-product-context.test.ts["src/lib/__tests__/nexora-product-context.test.ts"]
+n26_nexora-route-security.test.ts["src/lib/__tests__/nexora-route-security.test.ts"]
+n5_route.ts --> n10_fetcher.ts
+n5_route.ts --> n1_extractor.ts
+n5_route.ts --> n0_model.ts
+n5_route.ts --> n3_spec.ts
+n5_route.ts --> n11_pack.ts
+n14_route.ts --> n17_nexora-client.ts
+n14_route.ts --> n21_nexora-route-security.ts
+n15_route.ts --> n17_nexora-client.ts
+n15_route.ts --> n22_validate-design-context.ts
+n15_route.ts --> n4_nexora.ts
+n15_route.ts --> n21_nexora-route-security.ts
+n2_report.tsx --> n0_model.ts
+n2_report.tsx --> n7_export.ts
+n2_report.tsx --> n3_spec.ts
+n2_report.tsx --> n11_pack.ts
+n2_report.tsx --> n16_NexoraPanel.tsx
+n16_NexoraPanel.tsx --> n0_model.ts
+n16_NexoraPanel.tsx --> n4_nexora.ts
+n16_NexoraPanel.tsx --> n6_adapt.ts
+n16_NexoraPanel.tsx --> n3_spec.ts
+n16_NexoraPanel.tsx --> n20_nexora-product-context.ts
+n16_NexoraPanel.tsx --> n19_nexora-connection.ts
+n6_adapt.ts --> n3_spec.ts
+n6_adapt.ts --> n20_nexora-product-context.ts
+n7_export.ts --> n0_model.ts
+n7_export.ts --> n4_nexora.ts
+n1_extractor.ts --> n0_model.ts
+n10_fetcher.ts --> n0_model.ts
+n17_nexora-client.ts --> n18_nexora-config.ts
+n17_nexora-client.ts --> n20_nexora-product-context.ts
+n17_nexora-client.ts --> n4_nexora.ts
+n17_nexora-client.ts --> n22_validate-design-context.ts
+n21_nexora-route-security.ts --> n18_nexora-config.ts
+n4_nexora.ts --> n0_model.ts
+n4_nexora.ts --> n6_adapt.ts
+n4_nexora.ts --> n3_spec.ts
+n11_pack.ts --> n0_model.ts
+n11_pack.ts --> n3_spec.ts
+n11_pack.ts --> n7_export.ts
+n3_spec.ts --> n0_model.ts
+n22_validate-design-context.ts --> n4_nexora.ts
+n23_nexora-client.test.ts --> n17_nexora-client.ts
+n23_nexora-client.test.ts --> n4_nexora.ts
+n24_nexora-integration.test.ts --> n3_spec.ts
+n24_nexora-integration.test.ts --> n19_nexora-connection.ts
+n24_nexora-integration.test.ts --> n14_route.ts
+n24_nexora-integration.test.ts --> n15_route.ts
+n25_nexora-product-context.test.ts --> n20_nexora-product-context.ts
+n26_nexora-route-security.test.ts --> n21_nexora-route-security.ts
+n8_nexora.test.ts --> n1_extractor.ts
+n8_nexora.test.ts --> n7_export.ts
+n8_nexora.test.ts --> n4_nexora.ts
+n8_nexora.test.ts --> n3_spec.ts
+n8_nexora.test.ts --> n6_adapt.ts
+n8_nexora.test.ts --> n22_validate-design-context.ts
+n8_nexora.test.ts --> n20_nexora-product-context.ts
+n8_nexora.test.ts --> n0_model.ts
+n9_pack.test.ts --> n1_extractor.ts
+n9_pack.test.ts --> n11_pack.ts
+n9_pack.test.ts --> n3_spec.ts
+n9_pack.test.ts --> n6_adapt.ts
+n9_pack.test.ts --> n0_model.ts
+</pre>
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });</script>
+</body></html>

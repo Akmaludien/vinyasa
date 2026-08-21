@@ -1,0 +1,278 @@
+{
+  "eslint.config.mjs": {
+    "mtime": 1786191281,
+    "sha256": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493"
+  },
+  "next.config.ts": {
+    "mtime": 1786367902,
+    "sha256": "91f40db73abada98801bc82fb55a9afe18c5fb9743a78e61526f44f3fd2d7023"
+  },
+  "package.json": {
+    "mtime": 1786803006,
+    "sha256": "1abe6aa72cfb361e18dd28cde46e2c528c472480ce364e4c7adc4441414a195e"
+  },
+  "postcss.config.mjs": {
+    "mtime": 1786191282,
+    "sha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde"
+  },
+  "scripts/generate-integration-secrets.mjs": {
+    "mtime": 1786803006,
+    "sha256": "a2284fab0b03a8d5d1fe8439ce91e148fbd73c34202f9b896051dcce8584fadb"
+  },
+  "scripts/test-deepscan.ts": {
+    "mtime": 1786368061,
+    "sha256": "6759f78ec0ea89ac481ce7791a6948b254195e02bb8882ae5ad95bbe20195773"
+  },
+  "scripts/test-engine.ts": {
+    "mtime": 1786214130,
+    "sha256": "94d2d31a8275ad67c456876b14aa7633b8da517dbd2eacc551260fe3f842a0d9"
+  },
+  "scripts/test-features.ts": {
+    "mtime": 1786222111,
+    "sha256": "d929d48349b738ee9403f78dfa142fa7307b4c4623bce31a812c0718fd9fab8b"
+  },
+  "scripts/test-live.ts": {
+    "mtime": 1786214157,
+    "sha256": "bee77e910ee4632a9f275315dd49493c9bd59cc641c7b4b21bb1f9d29cff0e98"
+  },
+  "scripts/verify-nexora-http.mjs": {
+    "mtime": 1786799495,
+    "sha256": "a204eb31781446101ee7ebcca757441c709364f626495239081a141e3cfc7dd0"
+  },
+  "src/app/api/extract/route.ts": {
+    "mtime": 1786383399,
+    "sha256": "862e05e7eb15b7382e59d430e28faf79ac8986365f2ea31a712fb3a39af701ea"
+  },
+  "src/app/api/nexora/connect/route.ts": {
+    "mtime": 1786799495,
+    "sha256": "d533dc3aaeb7d0a09491c7681f3b83ebe23fe739fef3814685c43ed00c660c2e"
+  },
+  "src/app/api/nexora/sync/route.ts": {
+    "mtime": 1786799495,
+    "sha256": "55005ef3ebbf43062e6fe0e067aa353d00878d7cb196c378e23bf7579c63c877"
+  },
+  "src/app/layout.tsx": {
+    "mtime": 1786319413,
+    "sha256": "1289eec4e1510f190b35090bbb8dc650e8d76bb22a6a25a1b6ce0389ca7e5936"
+  },
+  "src/app/page.tsx": {
+    "mtime": 1786350054,
+    "sha256": "9ba41b4dac2085aa83554a75e116083ee27932f4915e8fd93e700b7e5e0cbc7a"
+  },
+  "src/app/report.tsx": {
+    "mtime": 1786390096,
+    "sha256": "e17731983a0b1ffc835d1be6cffd2ee60cd5bd1f8b0b7b9ece6cabb70ead6e9f"
+  },
+  "src/components/AiSettings.tsx": {
+    "mtime": 1786219743,
+    "sha256": "746dcfb0b3bf5481688d758ebaaece9adb44dd1bcc961073043a60fdc4952ded"
+  },
+  "src/components/NexoraPanel.tsx": {
+    "mtime": 1786803006,
+    "sha256": "b7026dd39be6f87b1d6838e9f378d2b61c37759077ab2175c1e7459aa92453dc"
+  },
+  "src/lib/accessibility.ts": {
+    "mtime": 1786226294,
+    "sha256": "fe1329544d13874c45b9dbc19170da6b6bf1bbb911a87394746f8206f7dd6bd0"
+  },
+  "src/lib/adapt.ts": {
+    "mtime": 1786415300,
+    "sha256": "51d382019cbacc6bf07ed190fd2cfeb047d3c269ec4a16f983f4efadf612382b"
+  },
+  "src/lib/ai.ts": {
+    "mtime": 1786273903,
+    "sha256": "adb7780afc94df263cf58aa0fb1d4514d7aada485e7f4e3276ac508a1ee7e123"
+  },
+  "src/lib/colors.ts": {
+    "mtime": 1786213613,
+    "sha256": "7ec545e4279b05da3335a86198cbc67d1eb3ad1996d87eafddc98204b7c42683"
+  },
+  "src/lib/components.ts": {
+    "mtime": 1786380914,
+    "sha256": "bac6da42684c58cb17897e35c108f01d9fe03849e8b1057c04ca451ce81e3a5c"
+  },
+  "src/lib/cssvars.ts": {
+    "mtime": 1786213218,
+    "sha256": "876638ceb459298ddef29ac78b4e70c9a0c68a038be7cdc974b143f2de76e896"
+  },
+  "src/lib/darkmode.ts": {
+    "mtime": 1786223297,
+    "sha256": "6edcdd301d009b28787bfa91f410571f74881e7adf628545dc9d4507c46177c5"
+  },
+  "src/lib/deepscan.ts": {
+    "mtime": 1786380004,
+    "sha256": "3a197597b36ffb9b5b737a240327679632a29446c7fc45762871a53b82670707"
+  },
+  "src/lib/design-md.ts": {
+    "mtime": 1786286433,
+    "sha256": "f6a9903c5090f5f50a815bc16fb15d84c5e6ddbd646f65c70bcbaf3f96863cb6"
+  },
+  "src/lib/diff.ts": {
+    "mtime": 1786223187,
+    "sha256": "41683e1581f7b65e3164dfd5a55c90eb2ad06ffc88e7916219027be0ef00ff49"
+  },
+  "src/lib/export.ts": {
+    "mtime": 1786380355,
+    "sha256": "74dd7b9508b930b053ba4c2907718e88d7d5e2bda7f2cf6c6d0462055da996f9"
+  },
+  "src/lib/extractor.ts": {
+    "mtime": 1786380540,
+    "sha256": "14ed4f3aac86d8e9a49cf7725e7eba372e32bf625c0cd1a19603cb662f10b774"
+  },
+  "src/lib/fetcher.ts": {
+    "mtime": 1786379762,
+    "sha256": "253c11170d4b3624c489d61b179dc156efb055b323c02484de21f27f4001deb9"
+  },
+  "src/lib/health.ts": {
+    "mtime": 1786221663,
+    "sha256": "547c569d9b0e0cd484d9a83d30a4856edb5acc000f9503003ec2fafcf0f2bd1f"
+  },
+  "src/lib/i18n.tsx": {
+    "mtime": 1786367958,
+    "sha256": "af1803a7a05430e4a75c529fea9ddccf25dcde742b760c73503dc721d60772c4"
+  },
+  "src/lib/model.ts": {
+    "mtime": 1786383358,
+    "sha256": "9b850ea1db344955fcc95db719fae825013f41418dcf4be2a3a62e4645bce8ea"
+  },
+  "src/lib/nexora-client.ts": {
+    "mtime": 1786389187,
+    "sha256": "d731da6136c3dc7dc7f673e04228279275b30d6510472e64dfea983affeed4c6"
+  },
+  "src/lib/nexora-config.ts": {
+    "mtime": 1786389080,
+    "sha256": "7a46b913d208ff9c60c9151ed8f23b30da7c9e3719cebd6c1457c86ee40cf451"
+  },
+  "src/lib/nexora-connection.ts": {
+    "mtime": 1786389884,
+    "sha256": "448ff6781339286ebd7d079ace06f92250b44a2d768ef7f73a20b718fbcf065e"
+  },
+  "src/lib/nexora-product-context.ts": {
+    "mtime": 1786799496,
+    "sha256": "b87801e1e9429d4b391ae97a968d4f8e73bf9aa2ff6fb013c8bf7e770f2bb937"
+  },
+  "src/lib/nexora-route-security.ts": {
+    "mtime": 1786799496,
+    "sha256": "0efaf42d383383b815c460258e945eab08d4bc58bf10e43da98a35fb8686d4f6"
+  },
+  "src/lib/nexora.ts": {
+    "mtime": 1786799496,
+    "sha256": "b12b1dcbbf539de032867ad61190306581efe23262552f7220487b5df5ddb39a"
+  },
+  "src/lib/pack.ts": {
+    "mtime": 1786383337,
+    "sha256": "42930b1130f3364895a9c8fa0df75faf1627c54a51c582a8ff4aedc22295930d"
+  },
+  "src/lib/playground.ts": {
+    "mtime": 1786253109,
+    "sha256": "ef1fd59b261574317ea6d7987deddc38ac563e690e9572d4d200810fe66dfd2b"
+  },
+  "src/lib/preview.ts": {
+    "mtime": 1786213535,
+    "sha256": "6db87e455be6682e36a05d1bc71c9d3663cf27c44be2d7767870e9f4916faf0e"
+  },
+  "src/lib/project-context.ts": {
+    "mtime": 1786383114,
+    "sha256": "77b744ed7551b4b444ed258801bb7ca2b34ee3b02ad7472b21e8bf810288ab65"
+  },
+  "src/lib/project.ts": {
+    "mtime": 1786382908,
+    "sha256": "5feef114cff407c43d864db0b5ba8bd804c00b0b888e00861390a5faccf288fa"
+  },
+  "src/lib/readiness.ts": {
+    "mtime": 1786382749,
+    "sha256": "de7cef0e4990c68cd6c079e7630494cfe5852ee82ee5676a905de3a5f331bcc2"
+  },
+  "src/lib/responsive.ts": {
+    "mtime": 1786221051,
+    "sha256": "c17e50fcfd6488f2be30e4c439f985af230e2ecb52273e314883dd897be640f9"
+  },
+  "src/lib/scan.ts": {
+    "mtime": 1786226112,
+    "sha256": "2f48b2a5f95e0d4d4facc7a96d02cc23074e5e1cfbc5fe738f8602f27e195c1e"
+  },
+  "src/lib/sessions.ts": {
+    "mtime": 1786277380,
+    "sha256": "f722750ee7584978735d02c1382b3413133b7a860102e95437ebe6dee935505d"
+  },
+  "src/lib/spec.ts": {
+    "mtime": 1786381545,
+    "sha256": "29114581000a2b5e39a141e8fe8ee54b5281f45ca6aa8c1b85805aea8f48ff64"
+  },
+  "src/lib/units.ts": {
+    "mtime": 1786213205,
+    "sha256": "874f6a28b0b02de8ada8b7ed734aeb13079a4bd0823147d5c4a150737317f587"
+  },
+  "src/lib/validate-design-context.ts": {
+    "mtime": 1786389259,
+    "sha256": "3fea24391874dbb08a7bbbf2b3e8c2d651a7e57ca55512d2eebdf601d76b562e"
+  },
+  "src/lib/__tests__/adapt.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "3a710c7927412958f244260069742f95800e9daf56c9694f081233db3aaf42b4"
+  },
+  "src/lib/__tests__/analysis.test.ts": {
+    "mtime": 1786226475,
+    "sha256": "86c5b154891c249596f4fdb1b0d5c001864bd0e96ac7943cf49170e6dd3c95be"
+  },
+  "src/lib/__tests__/colors.test.ts": {
+    "mtime": 1786225534,
+    "sha256": "020c60de8c434bb8ce99e3d1a3afd0e7781d789d72f4c13b7e6d0db2b0b723d2"
+  },
+  "src/lib/__tests__/extractor.test.ts": {
+    "mtime": 1786225690,
+    "sha256": "0bf62e1e9d78de6089ccb70d15a42dcf29380bae2fc319a181c423f2b0523b51"
+  },
+  "src/lib/__tests__/features.test.ts": {
+    "mtime": 1786277010,
+    "sha256": "480e812d2dc9e6eabb7bec0ff4dcabc191246b35f26177c32991138947e1169c"
+  },
+  "src/lib/__tests__/fetcher.test.ts": {
+    "mtime": 1786253600,
+    "sha256": "40b7781d2a8629d51ba1568e70f8d2b68550ceb7624efe81fa50fed2bda9d69f"
+  },
+  "src/lib/__tests__/helpers/server-only.ts": {
+    "mtime": 1786412172,
+    "sha256": "ff4fa5e5823017ed1337b284dd9568bae421cc6fee012bd569dec7f156665586"
+  },
+  "src/lib/__tests__/nexora-client.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "31136db719005690119d3d3cfbfb266ee3bd8c4ba73153ef8a5eb5723c121888"
+  },
+  "src/lib/__tests__/nexora-integration.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "8610010745b5f0a2fb0ecf28e17ee558e850e238407aa09da998147c8f959228"
+  },
+  "src/lib/__tests__/nexora-product-context.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "af7c31ea37a4f34133336b3128c9842fd89dee368ca646b692fbc561fdaa6b04"
+  },
+  "src/lib/__tests__/nexora-route-security.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "de38559495d785ed2e1827402a099b3bc7100c2f99a30431a6e1e2fcc4cfc9dd"
+  },
+  "src/lib/__tests__/nexora.test.ts": {
+    "mtime": 1786799496,
+    "sha256": "0560db1be71ee2f817a74a92b376bda41da726c84cefe99a4b22e67214c74581"
+  },
+  "src/lib/__tests__/pack.test.ts": {
+    "mtime": 1786383661,
+    "sha256": "b99a19e4155cb964f3b835c338e7de03ed4300060ac33cf2e45945c4ed2e77f4"
+  },
+  "src/lib/__tests__/route.test.ts": {
+    "mtime": 1786250096,
+    "sha256": "ecdbfc96e820d76303f4ee9f8e72fb2cc40c49fcb00326aef1dad18dcb3f14a4"
+  },
+  "src/lib/__tests__/security.test.ts": {
+    "mtime": 1786226124,
+    "sha256": "174242c1e7ac4f8e1aed276a061d95c03a519a4e718acfda4ff83c1c61d4ef44"
+  },
+  "src/lib/__tests__/units.test.ts": {
+    "mtime": 1786225615,
+    "sha256": "598944d27b32ad8d144d1e5d297673b7a94de24b6584cbe62aa6384fa724148a"
+  },
+  "tsconfig.json": {
+    "mtime": 1786191314,
+    "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c"
+  }
+}

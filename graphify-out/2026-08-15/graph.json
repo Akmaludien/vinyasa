@@ -1,0 +1,1570 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "generated": "2026-08-15T21:01:44.930Z",
+  "repo": "Vinyasa (design-md)",
+  "nodes": [
+    {
+      "id": "eslint.config.mjs",
+      "label": "eslint.config.mjs",
+      "source_file": "eslint.config.mjs",
+      "area": "root",
+      "file_type": "code"
+    },
+    {
+      "id": "next.config.ts",
+      "label": "next.config.ts",
+      "source_file": "next.config.ts",
+      "area": "root",
+      "file_type": "code"
+    },
+    {
+      "id": "package.json",
+      "label": "package.json",
+      "source_file": "package.json",
+      "area": "root",
+      "file_type": "code"
+    },
+    {
+      "id": "postcss.config.mjs",
+      "label": "postcss.config.mjs",
+      "source_file": "postcss.config.mjs",
+      "area": "root",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/generate-integration-secrets.mjs",
+      "label": "scripts/generate-integration-secrets.mjs",
+      "source_file": "scripts/generate-integration-secrets.mjs",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/test-deepscan.ts",
+      "label": "scripts/test-deepscan.ts",
+      "source_file": "scripts/test-deepscan.ts",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/test-engine.ts",
+      "label": "scripts/test-engine.ts",
+      "source_file": "scripts/test-engine.ts",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/test-features.ts",
+      "label": "scripts/test-features.ts",
+      "source_file": "scripts/test-features.ts",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/test-live.ts",
+      "label": "scripts/test-live.ts",
+      "source_file": "scripts/test-live.ts",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "scripts/verify-nexora-http.mjs",
+      "label": "scripts/verify-nexora-http.mjs",
+      "source_file": "scripts/verify-nexora-http.mjs",
+      "area": "scripts",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/api/extract/route.ts",
+      "label": "src/app/api/extract/route.ts",
+      "source_file": "src/app/api/extract/route.ts",
+      "area": "api/extract",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/api/nexora/connect/route.ts",
+      "label": "src/app/api/nexora/connect/route.ts",
+      "source_file": "src/app/api/nexora/connect/route.ts",
+      "area": "api/nexora",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/api/nexora/sync/route.ts",
+      "label": "src/app/api/nexora/sync/route.ts",
+      "source_file": "src/app/api/nexora/sync/route.ts",
+      "area": "api/nexora",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/layout.tsx",
+      "label": "src/app/layout.tsx",
+      "source_file": "src/app/layout.tsx",
+      "area": "app",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/page.tsx",
+      "label": "src/app/page.tsx",
+      "source_file": "src/app/page.tsx",
+      "area": "app",
+      "file_type": "code"
+    },
+    {
+      "id": "src/app/report.tsx",
+      "label": "src/app/report.tsx",
+      "source_file": "src/app/report.tsx",
+      "area": "app",
+      "file_type": "code"
+    },
+    {
+      "id": "src/components/AiSettings.tsx",
+      "label": "src/components/AiSettings.tsx",
+      "source_file": "src/components/AiSettings.tsx",
+      "area": "components",
+      "file_type": "code"
+    },
+    {
+      "id": "src/components/NexoraPanel.tsx",
+      "label": "src/components/NexoraPanel.tsx",
+      "source_file": "src/components/NexoraPanel.tsx",
+      "area": "components",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/accessibility.ts",
+      "label": "src/lib/accessibility.ts",
+      "source_file": "src/lib/accessibility.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/adapt.ts",
+      "label": "src/lib/adapt.ts",
+      "source_file": "src/lib/adapt.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/ai.ts",
+      "label": "src/lib/ai.ts",
+      "source_file": "src/lib/ai.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/colors.ts",
+      "label": "src/lib/colors.ts",
+      "source_file": "src/lib/colors.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/components.ts",
+      "label": "src/lib/components.ts",
+      "source_file": "src/lib/components.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/cssvars.ts",
+      "label": "src/lib/cssvars.ts",
+      "source_file": "src/lib/cssvars.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/darkmode.ts",
+      "label": "src/lib/darkmode.ts",
+      "source_file": "src/lib/darkmode.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/deepscan.ts",
+      "label": "src/lib/deepscan.ts",
+      "source_file": "src/lib/deepscan.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/design-md.ts",
+      "label": "src/lib/design-md.ts",
+      "source_file": "src/lib/design-md.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/diff.ts",
+      "label": "src/lib/diff.ts",
+      "source_file": "src/lib/diff.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/export.ts",
+      "label": "src/lib/export.ts",
+      "source_file": "src/lib/export.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/extractor.ts",
+      "label": "src/lib/extractor.ts",
+      "source_file": "src/lib/extractor.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/fetcher.ts",
+      "label": "src/lib/fetcher.ts",
+      "source_file": "src/lib/fetcher.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/health.ts",
+      "label": "src/lib/health.ts",
+      "source_file": "src/lib/health.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/i18n.tsx",
+      "label": "src/lib/i18n.tsx",
+      "source_file": "src/lib/i18n.tsx",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/model.ts",
+      "label": "src/lib/model.ts",
+      "source_file": "src/lib/model.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora-client.ts",
+      "label": "src/lib/nexora-client.ts",
+      "source_file": "src/lib/nexora-client.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora-config.ts",
+      "label": "src/lib/nexora-config.ts",
+      "source_file": "src/lib/nexora-config.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora-connection.ts",
+      "label": "src/lib/nexora-connection.ts",
+      "source_file": "src/lib/nexora-connection.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora-product-context.ts",
+      "label": "src/lib/nexora-product-context.ts",
+      "source_file": "src/lib/nexora-product-context.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora-route-security.ts",
+      "label": "src/lib/nexora-route-security.ts",
+      "source_file": "src/lib/nexora-route-security.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/nexora.ts",
+      "label": "src/lib/nexora.ts",
+      "source_file": "src/lib/nexora.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/pack.ts",
+      "label": "src/lib/pack.ts",
+      "source_file": "src/lib/pack.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/playground.ts",
+      "label": "src/lib/playground.ts",
+      "source_file": "src/lib/playground.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/preview.ts",
+      "label": "src/lib/preview.ts",
+      "source_file": "src/lib/preview.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/project-context.ts",
+      "label": "src/lib/project-context.ts",
+      "source_file": "src/lib/project-context.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/project.ts",
+      "label": "src/lib/project.ts",
+      "source_file": "src/lib/project.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/readiness.ts",
+      "label": "src/lib/readiness.ts",
+      "source_file": "src/lib/readiness.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/responsive.ts",
+      "label": "src/lib/responsive.ts",
+      "source_file": "src/lib/responsive.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/scan.ts",
+      "label": "src/lib/scan.ts",
+      "source_file": "src/lib/scan.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/sessions.ts",
+      "label": "src/lib/sessions.ts",
+      "source_file": "src/lib/sessions.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/spec.ts",
+      "label": "src/lib/spec.ts",
+      "source_file": "src/lib/spec.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/units.ts",
+      "label": "src/lib/units.ts",
+      "source_file": "src/lib/units.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/validate-design-context.ts",
+      "label": "src/lib/validate-design-context.ts",
+      "source_file": "src/lib/validate-design-context.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/adapt.test.ts",
+      "label": "src/lib/__tests__/adapt.test.ts",
+      "source_file": "src/lib/__tests__/adapt.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/analysis.test.ts",
+      "label": "src/lib/__tests__/analysis.test.ts",
+      "source_file": "src/lib/__tests__/analysis.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/colors.test.ts",
+      "label": "src/lib/__tests__/colors.test.ts",
+      "source_file": "src/lib/__tests__/colors.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/extractor.test.ts",
+      "label": "src/lib/__tests__/extractor.test.ts",
+      "source_file": "src/lib/__tests__/extractor.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/features.test.ts",
+      "label": "src/lib/__tests__/features.test.ts",
+      "source_file": "src/lib/__tests__/features.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/fetcher.test.ts",
+      "label": "src/lib/__tests__/fetcher.test.ts",
+      "source_file": "src/lib/__tests__/fetcher.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/helpers/server-only.ts",
+      "label": "src/lib/__tests__/helpers/server-only.ts",
+      "source_file": "src/lib/__tests__/helpers/server-only.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/nexora-client.test.ts",
+      "label": "src/lib/__tests__/nexora-client.test.ts",
+      "source_file": "src/lib/__tests__/nexora-client.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/nexora-integration.test.ts",
+      "label": "src/lib/__tests__/nexora-integration.test.ts",
+      "source_file": "src/lib/__tests__/nexora-integration.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/nexora-product-context.test.ts",
+      "label": "src/lib/__tests__/nexora-product-context.test.ts",
+      "source_file": "src/lib/__tests__/nexora-product-context.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/nexora-route-security.test.ts",
+      "label": "src/lib/__tests__/nexora-route-security.test.ts",
+      "source_file": "src/lib/__tests__/nexora-route-security.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/nexora.test.ts",
+      "label": "src/lib/__tests__/nexora.test.ts",
+      "source_file": "src/lib/__tests__/nexora.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/pack.test.ts",
+      "label": "src/lib/__tests__/pack.test.ts",
+      "source_file": "src/lib/__tests__/pack.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/route.test.ts",
+      "label": "src/lib/__tests__/route.test.ts",
+      "source_file": "src/lib/__tests__/route.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/security.test.ts",
+      "label": "src/lib/__tests__/security.test.ts",
+      "source_file": "src/lib/__tests__/security.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "src/lib/__tests__/units.test.ts",
+      "label": "src/lib/__tests__/units.test.ts",
+      "source_file": "src/lib/__tests__/units.test.ts",
+      "area": "lib",
+      "file_type": "code"
+    },
+    {
+      "id": "tsconfig.json",
+      "label": "tsconfig.json",
+      "source_file": "tsconfig.json",
+      "area": "root",
+      "file_type": "code"
+    },
+    {
+      "id": "pkg:eslint",
+      "label": "eslint",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:eslint-config-next",
+      "label": "eslint-config-next",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:next",
+      "label": "next",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:node:crypto",
+      "label": "node:crypto",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:react",
+      "label": "react",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:css-tree",
+      "label": "css-tree",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:fflate",
+      "label": "fflate",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    },
+    {
+      "id": "pkg:vitest",
+      "label": "vitest",
+      "source_file": "",
+      "area": "package",
+      "file_type": "package"
+    }
+  ],
+  "edges": [
+    {
+      "source": "eslint.config.mjs",
+      "target": "pkg:eslint",
+      "kind": "imports"
+    },
+    {
+      "source": "eslint.config.mjs",
+      "target": "pkg:eslint-config-next",
+      "kind": "imports"
+    },
+    {
+      "source": "next.config.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/generate-integration-secrets.mjs",
+      "target": "pkg:node:crypto",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-deepscan.ts",
+      "target": "src/lib/deepscan.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-engine.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-engine.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-features.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-features.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-live.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-live.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-live.ts",
+      "target": "src/lib/design-md.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "scripts/test-live.ts",
+      "target": "src/lib/preview.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/scan.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/readiness.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/pack.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/extract/route.ts",
+      "target": "src/lib/project.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/connect/route.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/connect/route.ts",
+      "target": "src/lib/nexora-client.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/connect/route.ts",
+      "target": "src/lib/nexora-route-security.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/sync/route.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/sync/route.ts",
+      "target": "src/lib/nexora-client.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/sync/route.ts",
+      "target": "src/lib/validate-design-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/sync/route.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/api/nexora/sync/route.ts",
+      "target": "src/lib/nexora-route-security.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/layout.tsx",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/layout.tsx",
+      "target": "src/lib/i18n.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/app/report.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/lib/i18n.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/components/AiSettings.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/lib/ai.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/page.tsx",
+      "target": "src/lib/sessions.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/design-md.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/preview.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/export.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/ai.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/components/AiSettings.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/health.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/accessibility.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/responsive.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/diff.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/playground.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/sessions.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/i18n.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/darkmode.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/readiness.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/lib/pack.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/app/report.tsx",
+      "target": "src/components/NexoraPanel.tsx",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/AiSettings.tsx",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/AiSettings.tsx",
+      "target": "src/lib/ai.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/adapt.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/components/NexoraPanel.tsx",
+      "target": "src/lib/nexora-connection.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/accessibility.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/adapt.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/adapt.ts",
+      "target": "src/lib/components.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/adapt.ts",
+      "target": "src/lib/project-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/adapt.ts",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/ai.ts",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/colors.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/components.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/cssvars.ts",
+      "target": "pkg:css-tree",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/darkmode.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/deepscan.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/deepscan.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/design-md.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/design-md.ts",
+      "target": "src/lib/health.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/design-md.ts",
+      "target": "src/lib/accessibility.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/design-md.ts",
+      "target": "src/lib/responsive.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/diff.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/export.ts",
+      "target": "pkg:fflate",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/export.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/export.ts",
+      "target": "src/lib/design-md.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/export.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "pkg:css-tree",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/colors.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/units.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/cssvars.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/health.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/accessibility.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/components.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/responsive.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/darkmode.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/extractor.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/fetcher.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/health.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/i18n.tsx",
+      "target": "pkg:react",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/model.ts",
+      "target": "src/lib/components.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/model.ts",
+      "target": "src/lib/health.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/model.ts",
+      "target": "src/lib/accessibility.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/model.ts",
+      "target": "src/lib/responsive.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/model.ts",
+      "target": "src/lib/darkmode.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-client.ts",
+      "target": "src/lib/nexora-config.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-client.ts",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-client.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-client.ts",
+      "target": "src/lib/validate-design-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-product-context.ts",
+      "target": "src/lib/project-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-route-security.ts",
+      "target": "pkg:node:crypto",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-route-security.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora-route-security.ts",
+      "target": "src/lib/nexora-config.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora.ts",
+      "target": "src/lib/adapt.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/nexora.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/pack.ts",
+      "target": "pkg:fflate",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/pack.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/pack.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/pack.ts",
+      "target": "src/lib/readiness.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/pack.ts",
+      "target": "src/lib/export.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/playground.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/preview.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/project.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/project.ts",
+      "target": "src/lib/project-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/readiness.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/responsive.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/scan.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/scan.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/sessions.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/spec.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/spec.ts",
+      "target": "src/lib/components.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/validate-design-context.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "src/lib/adapt.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "src/lib/components.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "src/lib/project-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/adapt.test.ts",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/health.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/accessibility.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/diff.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/export.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/analysis.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/colors.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/colors.test.ts",
+      "target": "src/lib/colors.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/extractor.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/extractor.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/extractor.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/features.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/features.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/features.test.ts",
+      "target": "src/lib/export.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/features.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/features.test.ts",
+      "target": "src/lib/sessions.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/fetcher.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/fetcher.test.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-client.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-client.test.ts",
+      "target": "src/lib/nexora-client.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-client.test.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "src/lib/nexora-connection.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "src/app/api/nexora/connect/route.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "src/app/api/nexora/sync/route.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-integration.test.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-product-context.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-product-context.test.ts",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-route-security.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-route-security.test.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora-route-security.test.ts",
+      "target": "src/lib/nexora-route-security.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/export.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/nexora.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/adapt.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/validate-design-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/nexora-product-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/nexora.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/readiness.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/pack.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/spec.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/project-context.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/adapt.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/project.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/pack.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/route.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/route.test.ts",
+      "target": "pkg:next",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/route.test.ts",
+      "target": "src/app/api/extract/route.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/route.test.ts",
+      "target": "src/lib/model.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/route.test.ts",
+      "target": "src/lib/extractor.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/security.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/security.test.ts",
+      "target": "src/lib/fetcher.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/security.test.ts",
+      "target": "src/lib/scan.ts",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/units.test.ts",
+      "target": "pkg:vitest",
+      "kind": "imports"
+    },
+    {
+      "source": "src/lib/__tests__/units.test.ts",
+      "target": "src/lib/units.ts",
+      "kind": "imports"
+    }
+  ],
+  "cycles": [
+    [
+      "src/lib/darkmode.ts",
+      "src/lib/responsive.ts",
+      "src/lib/accessibility.ts",
+      "src/lib/health.ts",
+      "src/lib/components.ts",
+      "src/lib/model.ts"
+    ]
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,9 @@
+{
+  "lib": "lib",
+  "app": "app",
+  "scripts": "scripts",
+  "api/extract": "api/extract",
+  "components": "components",
+  "api/nexora": "api/nexora",
+  "root": "root"
+}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, type ReactNode } from "react";
 import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
@@ -6,9 +6,8 @@ import { buildDesignMd, buildDownloadFilename, type MdOptions, type MdLang } fro
 import { buildPreviewHtml } from "@/lib/preview";
 import { buildExports, buildZip } from "@/lib/export";
 import { streamAiWithAutoSwitch, loadConfig, buildModelContext } from "@/lib/ai";
-import type { ModelContextSection } from "@/lib/ai";
+import type { ModelContextSection, AiConfig } from "@/lib/ai";
 import { AiSettingsButton } from "@/components/AiSettings";
-import type { AiConfig } from "@/lib/ai";
 import type { HealthReport, HealthCategory } from "@/lib/health";
 import type { A11yReport } from "@/lib/accessibility";
 import type { ResponsiveReport } from "@/lib/responsive";
@@ -22,6 +21,7 @@ import { buildDesignSpecification } from "@/lib/spec";
 import { computeReadiness } from "@/lib/readiness";
 import { buildDesignPackZip } from "@/lib/pack";
 import { NexoraPanel } from "@/components/NexoraPanel";
+import { VisualPlayground } from "@/components/VisualPlayground";
 
 const BASELINE_KEY = "vinyasa-baseline-scan";
 

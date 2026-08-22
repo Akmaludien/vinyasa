@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { ExtractResponse, ScanMode, ScanScopeKind } from "@/lib/model";
 import { FullReport } from "./report";
 import { useI18n, LangToggle, type DictKey } from "@/lib/i18n";
@@ -323,6 +324,12 @@ export default function HomePage() {
               </button>
             )}
             <AiSettingsButton config={aiConfig} onChange={handleAiConfigChange} />
+            <Link
+              href="/compare"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted hover:border-zinc-500 hover:text-fg"
+            >
+              A/B Compare
+            </Link>
             <ThemeToggle />
             <LangToggle />
           </div>

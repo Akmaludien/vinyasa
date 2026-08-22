@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
-  let body: { urls?: string[]; scope?: ScanScopeRequest; mode?: "fast" | "deep" };
+  let body: { urls?: string[]; url?: string; scope?: ScanScopeRequest; mode?: "fast" | "deep" };
   try {
     body = await req.json();
   } catch {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const rawUrls = (body.urls ?? []).map((u: string) => String(u).trim()).filter(Boolean);
+  const rawUrls = (body.urls ?? (body.url ? [body.url] : [])).map((u: string) => String(u).trim()).filter(Boolean);
   const scope = parseScanScope(body.scope, rawUrls, 1);
   let urls = scope.urls.slice(0, scope.maxUrls ?? 5);
 

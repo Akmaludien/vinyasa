@@ -21,11 +21,52 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+export function buildTailwindConfigJs(m: DesignModel): string {
+  const colors: Record<string, string> = {};
+  m.tokens.colors.primary.slice(0, 16).forEach((c, i) => {
+    const key = c.name ? c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") : `primary-${i + 1}`;
+    colors[key] = c.hex;
+  });
+  m.tokens.colors.neutral.slice(0, 12).forEach((c, i) => {
+    const key = c.name ? c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") : `neutral-${i + 1}`;
+    colors[key] = c.hex;
+  });
+
+  const fontFamilies: Record<string, string[]> = {};
+  m.tokens.typography.families.slice(0, 4).forEach((f, i) => {
+    fontFamilies[`sans-${i + 1}`] = [f.raw, "sans-serif"];
+  });
+
+  const spacing: Record<string, string> = {};
+  m.tokens.spacing.slice(0, 10).forEach((s, i) => {
+    spacing[`space-${i + 1}`] = s.raw;
+  });
+
+  const borderRadius: Record<string, string> = {};
+  m.tokens.radius.slice(0, 6).forEach((r, i) => {
+    borderRadius[`radius-${i + 1}`] = r.raw;
+  });
+
+  const config = {
+    theme: {
+      extend: {
+        colors,
+        fontFamily: fontFamilies,
+        spacing,
+        borderRadius,
+      },
+    },
+  };
+
+  return `/** @type {import('tailwindcss').Config} */\nmodule.exports = ${JSON.stringify(config, null, 2)};\n`;
+}
+
 export function buildExports(m: DesignModel, mdOpts?: MdOptions): ExportSet {
   const files: Record<string, string> = {};
   files["tokens.json"] = buildTokensJson(m);
   files["tokens.css"] = buildTokensCss(m);
   files["tailwind.css"] = buildTailwindCss(m);
+  files["tailwind.config.js"] = buildTailwindConfigJs(m);
   files["DESIGN.md"] = designMdForExport(m, mdOpts);
   files["raw.json"] = JSON.stringify(m, null, 2);
   files["nexora.json"] = buildNexoraDesignContextJson(m);

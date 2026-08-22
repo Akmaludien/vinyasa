@@ -48,42 +48,32 @@ const dict = {
     "nav.export": "Export",
     "nav.drift": "Drift",
     "nav.overall": "Keseluruhan",
-    "hero.lead": "Ubah website menjadi design system yang ",
-    "hero.gradient": "cerdas",
+    "hero.lead": "Bedah design system ",
+    "hero.gradient": "situs mana pun",
     "hero.tail": ".",
     "hero.subtitle":
-      "Vinyasa mengekstrak, menganalisis, dan mengaudit design system dari website mana pun — token, komponen, health, aksesibilitas, responsif — untuk dipahami, dibandingkan, dan diekspor.",
+      "Tempel URL. Token, komponen, skor health, dan audit WCAG, siap diekspor.",
     "home.urlLabel": "URL website",
     "home.scopeLabel": "Cakupan scan",
     "home.modeLabel": "Mode",
     "home.maxPages": "Maks pages",
     "home.start": "Analisis Website",
-    "home.capabilities": "Yang bisa Vinyasa lakukan",
     "home.how": "Cara kerjanya",
     "home.recent": "Scan terbaru",
     "home.recentEmpty": "Website yang anda analisis akan muncul di sini.",
     "scan.analyzing": "Menganalisis website",
     "scan.modeFast": "HTML & CSS statis (ringan)",
-    "scan.modeDeep": "Snapshot CSS dalam — lebih banyak stylesheet & @import",
+    "scan.modeDeep": "Snapshot CSS dalam, lebih banyak stylesheet & @import",
     "scan.loading": "Menganalisis…",
-    "cap.tokens": "Tokens",
-    "cap.tokensDesc": "Warna, tipografi, spacing, radius, shadow — diekstrak dari CSS asli.",
-    "cap.components": "Components",
-    "cap.componentsDesc": "Pola komponen terdeteksi dari selector heuristik.",
-    "cap.responsive": "Responsive",
-    "cap.responsiveDesc": "Skor & isu per viewport mobile, tablet, desktop.",
-    "cap.health": "Health",
-    "cap.healthDesc": "Skor deterministik & explainable per kategori desain.",
-    "cap.a11y": "Accessibility",
-    "cap.a11yDesc": "Kontras WCAG AA/AAA dengan isu berperingkat.",
-    "cap.export": "Export",
-    "cap.exportDesc": "tokens.json, tokens.css, Tailwind, DESIGN.md, ZIP.",
-    "step1": "Website",
-    "step1Desc": "Tempel URL situs yang ingin dianalisis.",
-    "step2": "Discovery & DesignModel",
-    "step2Desc": "Vinyasa menemukan halaman, mengurai CSS, dan membangun model desain kanonik.",
-    "step3": "Intelligence",
-    "step3Desc": "Health, aksesibilitas, responsif, komponen, dan AI — lalu ekspor.",
+    "flow.1": "Ekstrak",
+    "flow.1Desc":
+      "Vinyasa membaca CSS asli situs, lalu mengumpulkan warna, ukuran teks, jarak, dan komponen yang dipakai.",
+    "flow.2": "Nilai",
+    "flow.2Desc":
+      "Tiap bagian desain diberi skor, dan anda langsung tahu bagian mana yang bermasalah, bukan cuma angkanya.",
+    "flow.3": "Ekspor",
+    "flow.3Desc":
+      "Hasilnya siap dibawa ke proyek anda dalam format standar, tanpa perlu menyalin ulang satu per satu.",
     "scope.smart": "Otomatis pilih halaman representatif dari seluruh situs.",
     "scope.landing": "Analisis hanya halaman utama (homepage).",
     "scope.pages": "Analisis hingga 5 halaman representatif.",
@@ -140,42 +130,32 @@ const dict = {
     "nav.export": "Export",
     "nav.drift": "Drift",
     "nav.overall": "Overview",
-    "hero.lead": "Turn any website into a smart design system: ",
-    "hero.gradient": "smart",
+    "hero.lead": "Reverse-engineer the design system of ",
+    "hero.gradient": "any website",
     "hero.tail": ".",
     "hero.subtitle":
-      "Vinyasa extracts, analyzes, and audits design systems from any website — tokens, components, health, accessibility, responsive — to understand, compare, and export.",
+      "Paste a URL. Tokens, components, health scores, and a WCAG audit, ready to export.",
     "home.urlLabel": "Website URL",
     "home.scopeLabel": "Scan scope",
     "home.modeLabel": "Mode",
     "home.maxPages": "Max pages",
     "home.start": "Analyze Website",
-    "home.capabilities": "What Vinyasa can do",
     "home.how": "How it works",
     "home.recent": "Recent scans",
     "home.recentEmpty": "Websites you analyze will show up here.",
     "scan.analyzing": "Analyzing website",
     "scan.modeFast": "Lightweight static HTML & CSS",
-    "scan.modeDeep": "Deep CSS snapshot — more stylesheets & @import",
+    "scan.modeDeep": "Deep CSS snapshot, more stylesheets & @import",
     "scan.loading": "Analyzing…",
-    "cap.tokens": "Tokens",
-    "cap.tokensDesc": "Colors, typography, spacing, radius, shadow — extracted from original CSS.",
-    "cap.components": "Components",
-    "cap.componentsDesc": "Component patterns detected from heuristic selectors.",
-    "cap.responsive": "Responsive",
-    "cap.responsiveDesc": "Mobile, tablet, desktop viewport scores & issues.",
-    "cap.health": "Health",
-    "cap.healthDesc": "Deterministic & explainable per design category.",
-    "cap.a11y": "Accessibility",
-    "cap.a11yDesc": "WCAG AA/AAA contrast with ranked issues.",
-    "cap.export": "Export",
-    "cap.exportDesc": "tokens.json, tokens.css, Tailwind, DESIGN.md, ZIP.",
-    "step1": "Website",
-    "step1Desc": "Paste the URL of the site you want to analyze.",
-    "step2": "Discovery & DesignModel",
-    "step2Desc": "Vinyasa discovers pages, parses CSS, and builds a canonical design model.",
-    "step3": "Intelligence",
-    "step3Desc": "Health, accessibility, responsive, components, and AI — then export.",
+    "flow.1": "Extract",
+    "flow.1Desc":
+      "Vinyasa reads the site's own CSS and collects the colors, text sizes, spacing, and components in use.",
+    "flow.2": "Score",
+    "flow.2Desc":
+      "Every part of the design gets a score, and you see exactly which part is at fault, not just the number.",
+    "flow.3": "Export",
+    "flow.3Desc":
+      "Take the result straight into your project in standard formats, with nothing to copy by hand.",
     "scope.smart": "Automatically pick representative pages across the whole site.",
     "scope.landing": "Analyze only the homepage.",
     "scope.pages": "Analyze up to 5 representative pages.",
@@ -219,13 +199,13 @@ export function useI18n() {
 export function LangToggle() {
   const { lang, setLang } = useI18n();
   return (
-    <div className="inline-flex rounded-full border border-zinc-700 p-0.5">
+    <div className="inline-flex shrink-0 rounded-md border border-border p-0.5">
       {(["id", "en"] as Lang[]).map((l) => (
         <button
           key={l}
           onClick={() => setLang(l)}
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase transition-colors ${
-            lang === l ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:text-zinc-300"
+          className={`rounded-sm px-2 py-0.5 text-2xs font-bold uppercase transition-colors ${
+            lang === l ? "bg-fg text-canvas" : "text-faint hover:text-fg"
           }`}
         >
           {l}

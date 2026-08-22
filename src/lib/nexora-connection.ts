@@ -1,6 +1,6 @@
 /**
  * Client-side Nexora connection state. Persists only the connected project key
- * (never the integration token — that stays in the server env) to localStorage.
+ * (never the integration token - that stays in the server env) to localStorage.
  */
 
 export type NexoraSyncStatus =
@@ -13,7 +13,7 @@ export type NexoraSyncStatus =
 
 export interface NexoraConnection {
   status: NexoraSyncStatus;
-  /** Connected Nexora project key (client projection — never a token). */
+  /** Connected Nexora project key (client projection - never a token). */
   projectKey: string | null;
   projectName?: string;
   /** Highest Nexora artifact version known to this client. */
@@ -61,7 +61,7 @@ function safeRead(): NexoraConnection {
 
 function safeWrite(conn: NexoraConnection): void {
   if (typeof window === "undefined") return;
-  // Only ever persist the client projection — never a token.
+  // Only ever persist the client projection - never a token.
   const projection: NexoraConnection = {
     status: conn.status,
     projectKey: conn.projectKey,
@@ -73,7 +73,7 @@ function safeWrite(conn: NexoraConnection): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(projection));
   } catch {
-    // Storage unavailable (private mode / quota) — fail soft.
+    // Storage unavailable (private mode / quota) - fail soft.
   }
 }
 

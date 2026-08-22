@@ -103,7 +103,7 @@ export interface DesignVersion {
 
 /**
  * Deterministic canonical design specification derived from a DesignModel.
- * The reference (website) is a DESIGN SOURCE — not the product specification.
+ * The reference (website) is a DESIGN SOURCE - not the product specification.
  */
 export function buildDesignSpecification(m: DesignModel): DesignSpecification {
   const t = m.tokens;

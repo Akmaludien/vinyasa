@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 /**
  * Server-side proxy for reading a Nexora project + its Product Context. The
  * integration token lives only in the Vinyasa server env and is injected by
- * `nexoraClient` — the client only ever sends a project key plus the Vinyasa
+ * `nexoraClient` - the client only ever sends a project key plus the Vinyasa
  * proxy access key. This route exposes Product Context, so it is protected.
  */
 export async function GET(request: NextRequest) {

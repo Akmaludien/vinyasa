@@ -27,7 +27,7 @@ function isSafeSourceUrl(value: string): boolean {
  * access key.
  *
  * `sourceUrl` has a single source of truth: `payload.sourceUrl`. A request-level
- * `sourceUrl` is accepted only when it agrees with the payload — a mismatch is
+ * `sourceUrl` is accepted only when it agrees with the payload - a mismatch is
  * rejected rather than silently resolved.
  */
 export async function POST(request: NextRequest) {

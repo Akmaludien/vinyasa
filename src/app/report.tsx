@@ -73,9 +73,9 @@ function fmtBytes(n: number): string {
 
 function ScoreBar({ value }: { value: number }) {
   const color =
-    value >= 80 ? "bg-emerald-500" : value >= 50 ? "bg-amber-500" : "bg-red-500";
+    value >= 80 ? "bg-success" : value >= 50 ? "bg-warning" : "bg-danger";
   return (
-    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-800">
+    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-border">
       <div className={`h-full ${color}`} style={{ width: `${value}%` }} />
     </div>
   );
@@ -85,7 +85,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
   return (
     <div className="mb-4">
       <h2 className="text-lg font-semibold">{title}</h2>
-      {subtitle && <p className="text-sm text-zinc-500">{subtitle}</p>}
+      {subtitle && <p className="text-sm text-faint">{subtitle}</p>}
     </div>
   );
 }
@@ -115,8 +115,8 @@ function ColorGrid({
           <div className="h-14 w-full" style={{ background: t.hex }} />
           <div className="px-2 py-1.5">
             <div className="truncate text-xs font-medium text-fg">{t.name}</div>
-            <div className="font-mono text-[11px] text-muted">{t.hex}</div>
-            <div className="text-[11px] text-faint">{t.usage}%</div>
+            <div className="font-mono text-xs text-muted">{t.hex}</div>
+            <div className="text-xs text-faint">{t.usage}%</div>
           </div>
         </button>
       ))}
@@ -138,7 +138,7 @@ function ColorDetail({ token }: { token: ColorToken }) {
         </div>
         <div className="ml-auto text-right">
           <div className="text-lg font-bold text-fg">{token.usage}%</div>
-          <div className="text-[11px] text-faint">{token.count} pemakaian</div>
+          <div className="text-xs text-faint">{token.count} pemakaian</div>
         </div>
       </div>
 
@@ -155,10 +155,10 @@ function ColorDetail({ token }: { token: ColorToken }) {
 
       {token.sources.length > 0 && (
         <div className="mt-3">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Sumber</div>
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Sumber</div>
           <div className="flex flex-wrap gap-1">
             {token.sources.slice(0, 8).map((s) => (
-              <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+              <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-2xs text-muted">
                 {s}
               </code>
             ))}
@@ -168,10 +168,10 @@ function ColorDetail({ token }: { token: ColorToken }) {
 
       {token.selectors.length > 0 && (
         <div className="mt-3">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-faint">Selector</div>
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Selector</div>
           <div className="flex flex-wrap gap-1">
             {token.selectors.slice(0, 12).map((sel) => (
-              <code key={sel} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+              <code key={sel} className="rounded bg-surface px-1.5 py-0.5 font-mono text-2xs text-muted">
                 {sel}
               </code>
             ))}
@@ -187,7 +187,7 @@ function ColorsPanel({ result }: { result: DesignModel }) {
   const [selected, setSelected] = useState<ColorToken | null>(null);
   return (
     <>
-      <SectionHeader title="Warna primer" subtitle="Token warna paling sering dipakai — klik untuk detail & sumber" />
+      <SectionHeader title="Warna primer" subtitle="Token warna paling sering dipakai. Klik untuk detail & sumber" />
       <div className="grid gap-4 lg:grid-cols-[1fr,320px]">
         <div>
           <ColorGrid tokens={colors.primary} onSelect={setSelected} selectedHex={selected?.hex ?? null} />
@@ -195,7 +195,7 @@ function ColorsPanel({ result }: { result: DesignModel }) {
           <ColorGrid tokens={colors.neutral} onSelect={setSelected} selectedHex={selected?.hex ?? null} />
         </div>
         <div className="lg:sticky lg:top-4">
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-faint">
+          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
             Source Inspector
           </div>
           {selected ? (
@@ -220,25 +220,25 @@ function TypographyPanel({ result }: { result: DesignModel }) {
         {fonts.families.map((f) => (
           <code
             key={f.raw}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs"
+            className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs"
           >
             {f.raw}
-            <span className="ml-2 text-zinc-500">{f.usage}%</span>
+            <span className="ml-2 text-faint">{f.usage}%</span>
           </code>
         ))}
       </div>
 
       <SectionHeader title="Skala ukuran font" />
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
+      <div className="overflow-hidden rounded-xl border border-border">
         {fonts.sizes.map((s, i) => (
           <div
-            key={s.px}
-            className={`flex items-center justify-between px-4 py-2 ${i % 2 ? "bg-zinc-900/40" : ""}`}
+            key={`${s.raw}-${i}`}
+            className={`flex items-center justify-between px-4 py-2 ${i % 2 ? "bg-surface-2/60" : ""}`}
           >
             <span className="font-mono text-sm">{s.raw}</span>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-500">{s.px}px</span>
-              <span className="w-10 text-right text-xs text-zinc-500">{s.usage}%</span>
+              <span className="text-xs text-faint">{s.px}px</span>
+              <span className="w-10 text-right text-xs text-faint">{s.usage}%</span>
             </div>
           </div>
         ))}
@@ -248,13 +248,13 @@ function TypographyPanel({ result }: { result: DesignModel }) {
         <>
           <SectionHeader title="Berat font" />
           <div className="flex flex-wrap gap-2">
-            {fonts.weights.map((w) => (
+            {fonts.weights.map((w, i) => (
               <span
-                key={w.value}
-                className="rounded-full border border-zinc-800 px-3 py-1 text-xs"
+                key={`${w.value}-${i}`}
+                className="rounded-full border border-border px-3 py-1 text-xs"
                 style={{ fontWeight: w.value }}
               >
-                {w.value} Â· {w.usage}%
+                {w.value} · {w.usage}%
               </span>
             ))}
           </div>
@@ -262,9 +262,9 @@ function TypographyPanel({ result }: { result: DesignModel }) {
       )}
 
       <SectionHeader title="Gaya teks yang umum dipakai" />
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
+      <div className="overflow-hidden rounded-xl border border-border">
         <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-900 text-xs text-zinc-500">
+          <thead className="bg-surface-2 text-xs text-faint">
             <tr>
               <th className="px-4 py-2 font-medium">Contoh</th>
               <th className="px-4 py-2 font-medium">Ukuran</th>
@@ -275,7 +275,7 @@ function TypographyPanel({ result }: { result: DesignModel }) {
           </thead>
           <tbody>
             {result.tokens.textStyles.slice(0, 8).map((t, i) => (
-              <tr key={i} className="border-t border-zinc-800">
+              <tr key={i} className="border-t border-border">
                 <td
                   className="px-4 py-3"
                   style={{
@@ -290,7 +290,7 @@ function TypographyPanel({ result }: { result: DesignModel }) {
                 <td className="px-4 py-3 font-mono text-xs">{t.fontSize}</td>
                 <td className="hidden px-4 py-3 text-xs sm:table-cell">{t.fontWeight}</td>
                 <td className="hidden px-4 py-3 text-xs sm:table-cell">{t.lineHeight}</td>
-                <td className="max-w-[200px] truncate px-4 py-3 font-mono text-[11px] text-zinc-500">
+                <td className="max-w-[200px] truncate px-4 py-3 font-mono text-xs text-faint">
                   {t.selectors[0]}
                 </td>
               </tr>
@@ -306,20 +306,20 @@ function SpacingPanel({ result }: { result: DesignModel }) {
   const spacing = result.tokens.spacing;
   return (
     <>
-      <SectionHeader title="Spacing" subtitle="Margin, padding, dan gap — diurutkan berdasarkan pemakaian" />
+      <SectionHeader title="Spacing" subtitle="Margin, padding, dan gap, diurutkan berdasarkan pemakaian" />
       {spacing.length === 0 ? (
-        <p className="text-sm text-zinc-500">Tidak terdeteksi.</p>
+        <p className="text-sm text-faint">Tidak terdeteksi.</p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-800">
+        <div className="overflow-hidden rounded-xl border border-border">
           {spacing.map((s, i) => (
             <div
               key={s.raw}
-              className={`flex items-center justify-between px-4 py-2 ${i % 2 ? "bg-zinc-900/40" : ""}`}
+              className={`flex items-center justify-between px-4 py-2 ${i % 2 ? "bg-surface-2/60" : ""}`}
             >
               <span className="font-mono text-sm">{s.raw}</span>
               <div className="flex items-center gap-3">
-                {s.px !== null && <span className="text-xs text-zinc-500">{s.px}px</span>}
-                <span className="w-10 text-right text-xs text-zinc-500">{s.usage}%</span>
+                {s.px !== null && <span className="text-xs text-faint">{s.px}px</span>}
+                <span className="w-10 text-right text-xs text-faint">{s.usage}%</span>
               </div>
             </div>
           ))}
@@ -335,14 +335,14 @@ function ShapesPanel({ result }: { result: DesignModel }) {
     <>
       <SectionHeader title="Border radius" />
       {radius.length === 0 ? (
-        <p className="text-sm text-zinc-500">Tidak terdeteksi.</p>
+        <p className="text-sm text-faint">Tidak terdeteksi.</p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {radius.map((r) => (
-            <div key={r.raw} className="rounded-xl border border-zinc-800 p-3 text-center">
-              <div className="mx-auto h-14 w-14 bg-zinc-700" style={{ borderRadius: r.raw }} />
+            <div key={r.raw} className="rounded-xl border border-border p-3 text-center">
+              <div className="mx-auto h-14 w-14 bg-border-strong" style={{ borderRadius: r.raw }} />
               <div className="mt-2 font-mono text-xs">{r.raw}</div>
-              <div className="text-[11px] text-zinc-500">{r.usage}%</div>
+              <div className="text-xs text-faint">{r.usage}%</div>
             </div>
           ))}
         </div>
@@ -353,7 +353,7 @@ function ShapesPanel({ result }: { result: DesignModel }) {
           <SectionHeader title="Borders" />
           <div className="flex flex-wrap gap-2">
             {borders.map((b) => (
-              <code key={b.raw} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs">
+              <code key={b.raw} className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs">
                 {b.raw}
               </code>
             ))}
@@ -365,10 +365,10 @@ function ShapesPanel({ result }: { result: DesignModel }) {
         <>
           <SectionHeader title="Breakpoints (@media)" />
           <div className="flex flex-wrap gap-2">
-            {breakpoints.map((b) => (
+            {breakpoints.map((b, i) => (
               <span
-                key={`${b.feature}-${b.raw}`}
-                className="rounded-full border border-zinc-800 px-3 py-1 text-xs"
+                key={`${b.feature}-${b.raw}-${i}`}
+                className="rounded-full border border-border px-3 py-1 text-xs"
               >
                 {b.feature}: {b.raw}
               </span>
@@ -389,7 +389,7 @@ function EffectsPanel({ result }: { result: DesignModel }) {
           <SectionHeader title="Shadows" />
           <div className="flex flex-wrap gap-2">
             {shadows.map((s) => (
-              <code key={s.raw} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs">
+              <code key={s.raw} className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs">
                 {s.raw.slice(0, 60)}
               </code>
             ))}
@@ -399,7 +399,7 @@ function EffectsPanel({ result }: { result: DesignModel }) {
       {gradients.length > 0 && (
         <>
           <SectionHeader title="Gradients" />
-          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+          <div className="overflow-hidden rounded-xl border border-border bg-canvas p-3">
             {gradients.slice(0, 6).map((g) => (
               <div
                 key={g.raw}
@@ -415,7 +415,7 @@ function EffectsPanel({ result }: { result: DesignModel }) {
           <SectionHeader title="Durasi transisi" />
           <div className="flex flex-wrap gap-2">
             {durations.map((d) => (
-              <span key={d.raw} className="rounded-full border border-zinc-800 px-3 py-1 text-xs">
+              <span key={d.raw} className="rounded-full border border-border px-3 py-1 text-xs">
                 {d.raw}
               </span>
             ))}
@@ -427,7 +427,7 @@ function EffectsPanel({ result }: { result: DesignModel }) {
           <SectionHeader title="Easing" />
           <div className="flex flex-wrap gap-2">
             {easings.map((e) => (
-              <code key={e.raw} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs">
+              <code key={e.raw} className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs">
                 {e.raw}
               </code>
             ))}
@@ -437,7 +437,7 @@ function EffectsPanel({ result }: { result: DesignModel }) {
       {shadows.length === 0 &&
         gradients.length === 0 &&
         durations.length === 0 &&
-        easings.length === 0 && <p className="text-sm text-zinc-500">Tidak ada efek yang terdeteksi.</p>}
+        easings.length === 0 && <p className="text-sm text-faint">Tidak ada efek yang terdeteksi.</p>}
     </>
   );
 }
@@ -448,11 +448,11 @@ function AuditPanel({ result }: { result: DesignModel }) {
     <>
       <SectionHeader title="Sumber CSS" subtitle="Setiap stylesheet yang dibaca beserta skor akurasi" />
       {sources.length === 0 ? (
-        <p className="text-sm text-zinc-500">Tidak ada sumber CSS yang tercatat.</p>
+        <p className="text-sm text-faint">Tidak ada sumber CSS yang tercatat.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-900 text-xs text-zinc-500">
+            <thead className="bg-surface-2 text-xs text-faint">
               <tr>
                 <th className="px-4 py-2 font-medium">Sumber</th>
                 <th className="px-4 py-2 font-medium">Tipe</th>
@@ -466,8 +466,8 @@ function AuditPanel({ result }: { result: DesignModel }) {
             </thead>
             <tbody>
               {sources.map((s, i) => (
-                <tr key={i} className="border-t border-zinc-800">
-                  <td className="max-w-[220px] truncate px-4 py-2.5 font-mono text-[11px] text-zinc-400">
+                <tr key={i} className="border-t border-border">
+                  <td className="max-w-[220px] truncate px-4 py-2.5 font-mono text-xs text-muted">
                     {s.url}
                   </td>
                   <td className="px-4 py-2.5 text-xs">{s.kind}</td>
@@ -516,16 +516,16 @@ function MdControls({
   }
 
   return (
-    <div className="mb-4 grid gap-3 rounded-xl border border-zinc-800 p-4 md:grid-cols-2">
+    <div className="mb-4 grid gap-3 rounded-xl border border-border p-4 md:grid-cols-2">
       <div>
-        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">Bahasa</div>
-        <div className="inline-flex rounded-lg border border-zinc-700 p-0.5">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-faint">Bahasa</div>
+        <div className="inline-flex rounded-lg border border-border p-0.5">
           {(["id", "en"] as MdLang[]).map((l) => (
             <button
               key={l}
               onClick={() => onChange({ ...opts, lang: l })}
               className={`rounded-md px-3 py-1 text-xs transition-colors ${
-                (opts.lang ?? "id") === l ? "bg-zinc-100 text-zinc-900" : "text-zinc-400"
+                (opts.lang ?? "id") === l ? "bg-fg text-canvas" : "text-muted"
               }`}
             >
               {l === "id" ? "Indonesia" : "English"}
@@ -534,7 +534,7 @@ function MdControls({
         </div>
       </div>
       <div>
-        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-faint">
           Bagian yang disertakan
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -546,8 +546,8 @@ function MdControls({
                 onClick={() => toggle(s.key)}
                 className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                   on
-                    ? "border-zinc-400 bg-zinc-700 text-white"
-                    : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
+                    ? "border-fg bg-fg text-canvas"
+                    : "border-border text-faint hover:border-border-strong"
                 }`}
               >
                 {on ? "✓ " : ""}
@@ -593,18 +593,18 @@ return (
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           onClick={copy}
-          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+          className="rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-muted"
         >
           {copied ? "Tersalin!" : "Salin"}
         </button>
         <button
           onClick={download}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-fg hover:border-border-strong"
         >
           Download {filename}
         </button>
       </div>
-      <pre className="max-h-[60vh] overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs leading-6 text-zinc-300">
+      <pre className="max-h-[60vh] overflow-auto rounded-xl border border-border bg-canvas p-4 text-xs leading-6 text-fg">
         {md}
       </pre>
     </>
@@ -617,7 +617,7 @@ function PreviewPanel({ result }: { result: DesignModel }) {
     <iframe
       title="Pratinjau design tokens"
       srcDoc={html}
-      className="h-[70vh] w-full rounded-xl border border-zinc-800 bg-white"
+      className="h-[70vh] w-full rounded-xl border border-border bg-white"
     />
   );
 }
@@ -638,7 +638,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
     <>
       <SectionHeader
         title="Pola komponen"
-        subtitle="Deteksi heuristik berbasis selector — bukan kepastian mutlak"
+        subtitle="Deteksi heuristik berbasis selector, bukan kepastian mutlak"
       />
       <div className="grid gap-4 lg:grid-cols-[260px,1fr]">
         <div className="flex flex-col gap-1.5">
@@ -654,7 +654,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
               }`}
             >
               <span className="text-sm font-medium capitalize text-fg">{c.name}</span>
-              <span className="shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[11px] text-muted">
+              <span className="shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-xs text-muted">
                 x{c.count} · {c.confidence}%
               </span>
             </button>
@@ -669,17 +669,17 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
                 <p
                   className={`text-xs font-medium ${confColor(active.confidence)}`}
                 >
-                  Confidence {active.confidence}% — {active.confidence >= 70 ? "pola konsisten" : "heuristik lemah"}
+                  Confidence {active.confidence}%, {active.confidence >= 70 ? "pola konsisten" : "heuristik lemah"}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div className="rounded-lg border border-border bg-surface px-4 py-1.5">
                   <div className="text-base font-bold text-fg">{active.count}</div>
-                  <div className="text-[10px] text-faint">selector</div>
+                  <div className="text-2xs text-faint">selector</div>
                 </div>
                 <div className="rounded-lg border border-border bg-surface px-4 py-1.5">
                   <div className="text-base font-bold text-fg">{active.variantCount}</div>
-                  <div className="text-[10px] text-faint">varian</div>
+                  <div className="text-2xs text-faint">varian</div>
                 </div>
               </div>
             </div>
@@ -695,7 +695,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
                       <div className="text-xs font-medium text-fg">{prop}</div>
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         {vals.slice(0, 4).map((v) => (
-                          <code key={v} className="rounded bg-canvas px-1 py-0.5 text-[10px] text-muted">
+                          <code key={v} className="rounded bg-canvas px-1 py-0.5 text-2xs text-muted">
                             {v}
                           </code>
                         ))}
@@ -712,7 +712,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
               </div>
               <div className="flex flex-wrap gap-1">
                 {active.selectors.map((s) => (
-                  <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                  <code key={s} className="rounded bg-surface px-1.5 py-0.5 font-mono text-2xs text-muted">
                     {s}
                   </code>
                 ))}
@@ -722,7 +722,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
                   <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Halaman</div>
                   <div className="flex flex-wrap gap-1">
                     {active.pages.slice(0, 8).map((p) => (
-                      <code key={p} className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                      <code key={p} className="rounded bg-surface px-1.5 py-0.5 font-mono text-2xs text-muted">
                         {p}
                       </code>
                     ))}
@@ -731,7 +731,7 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
               )}
             </div>
 
-            <p className="text-[11px] text-faint">
+            <p className="text-xs text-faint">
               Deteksi berbasis nama class (heuristik). Interpretasi manual tetap disarankan untuk tata letak kompleks.
             </p>
           </div>
@@ -742,10 +742,10 @@ function ComponentsPanel({ result }: { result: DesignModel }) {
 }
 
 function HealthBar({ value }: { value: number }) {
-  const color = value >= 85 ? "bg-emerald-500" : value >= 65 ? "bg-amber-500" : "bg-red-500";
+  const color = value >= 85 ? "bg-success" : value >= 65 ? "bg-warning" : "bg-danger";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-2 w-32 overflow-hidden rounded-full bg-zinc-800">
+      <div className="h-2 w-32 overflow-hidden rounded-full bg-border">
         <div className={`h-full ${color}`} style={{ width: `${value}%` }} />
       </div>
       <span className="w-8 text-right text-sm font-bold">{value}</span>
@@ -755,27 +755,27 @@ function HealthBar({ value }: { value: number }) {
 
 function HealthCategoryCard({ cat }: { cat: HealthCategory }) {
   return (
-    <div className="rounded-xl border border-zinc-800 p-4">
+    <div className="rounded-xl border border-border p-4">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-sm font-medium">{cat.name}</div>
         <HealthBar value={cat.score} />
       </div>
-      <p className="text-xs text-zinc-500">{cat.explanation}</p>
+      <p className="text-xs text-faint">{cat.explanation}</p>
       {cat.dominantValues.length > 0 && (
         <div className="mt-2">
-          <div className="text-[11px] text-zinc-500">Skala dominan: {cat.dominantValues.join(" / ")}</div>
+          <div className="text-xs text-faint">Skala dominan: {cat.dominantValues.join(" / ")}</div>
         </div>
       )}
       {cat.outliers.length > 0 && (
-        <div className="mt-1 text-[11px]">
-          <span className="text-amber-400">Outlier: {cat.outliers.join(", ")}</span>
+        <div className="mt-1 text-xs">
+          <span className="text-warning">Outlier: {cat.outliers.join(", ")}</span>
         </div>
       )}
       {cat.issues.map((iss, i) => (
-        <div key={i} className="mt-2 rounded-lg border border-red-900/30 bg-red-950/20 p-2 text-[11px] text-red-300">
+        <div key={i} className="mt-2 rounded-lg border border-danger-border bg-danger-bg p-2 text-xs text-danger">
           <div className="font-semibold capitalize">{iss.severity}</div>
           <div>{iss.message}</div>
-          {iss.recommendation && <div className="mt-1 text-zinc-400">{iss.recommendation}</div>}
+          {iss.recommendation && <div className="mt-1 text-muted">{iss.recommendation}</div>}
         </div>
       ))}
     </div>
@@ -785,11 +785,11 @@ function HealthCategoryCard({ cat }: { cat: HealthCategory }) {
 function ResponsivePanel({ result }: { result: DesignModel }) {
   const r = result.responsive as ResponsiveReport | null;
   const [vp, setVp] = useState(0);
-  if (!r) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
+  if (!r) return <p className="text-sm text-faint">Belum dihitung.</p>;
   const tiers: Array<{ label: string; value: number; range: string }> = [
-    { label: "Mobile", value: r.mobile, range: "320–414px" },
-    { label: "Tablet", value: r.tablet, range: "768–1024px" },
-    { label: "Desktop", value: r.desktop, range: "1280–1920px" },
+    { label: "Mobile", value: r.mobile, range: "320-414px" },
+    { label: "Tablet", value: r.tablet, range: "768-1024px" },
+    { label: "Desktop", value: r.desktop, range: "1280-1920px" },
   ];
   const active = tiers[vp];
   const c = ratingColor(active.value);
@@ -816,7 +816,7 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
             <div className="text-xs font-medium text-fg">{t.label}</div>
             <div className={`mt-1 text-2xl font-bold ${i === vp ? c.text : "text-fg"}`}>{t.value}</div>
             <ScoreBar value={t.value} />
-            <div className="mt-1 text-[10px] text-faint">{t.range}</div>
+            <div className="mt-1 text-2xs text-faint">{t.range}</div>
           </button>
         ))}
       </div>
@@ -835,8 +835,8 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
         <>
           <div className="mb-1 text-xs font-medium uppercase tracking-wide text-faint">Breakpoints</div>
           <div className="mb-4 flex flex-wrap gap-2">
-            {r.breakpoints.map((b) => (
-              <span key={`${b.feature}-${b.value}`} className="rounded-md border border-border bg-surface px-2.5 py-1 font-mono text-xs text-muted">
+            {r.breakpoints.map((b, i) => (
+              <span key={`${b.feature}-${b.value}-${i}`} className="rounded-md border border-border bg-surface px-2.5 py-1 font-mono text-xs text-muted">
                 {b.feature}: {b.value}
                 {b.px !== null && <span className="text-faint"> ({b.px}px)</span>}
               </span>
@@ -854,8 +854,8 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
             <div key={i} className="rounded-xl border border-border bg-canvas p-3">
               <div className="flex items-center gap-2">
                 <span
-                  className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
-                    iss.severity === "warning" ? "bg-amber-950 text-warning" : "bg-surface text-muted"
+                  className={`rounded px-2 py-0.5 text-2xs font-bold uppercase ${
+                    iss.severity === "warning" ? "bg-warning-bg text-warning" : "bg-surface text-muted"
                   }`}
                 >
                   {iss.severity}
@@ -865,7 +865,7 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
               <p className="mt-1 text-sm text-muted">{iss.message}</p>
               {iss.recommendation && <p className="mt-1 text-xs text-faint">{iss.recommendation}</p>}
               {iss.evidence.length > 0 && (
-                <code className="mt-1 block font-mono text-[11px] text-faint">
+                <code className="mt-1 block font-mono text-xs text-faint">
                   {iss.evidence.join(" · ")}
                 </code>
               )}
@@ -873,7 +873,7 @@ function ResponsivePanel({ result }: { result: DesignModel }) {
           ))}
         </div>
       )}
-      <p className="mt-3 text-[11px] text-faint">{r.note}</p>
+      <p className="mt-3 text-xs text-faint">{r.note}</p>
     </>
   );
 }
@@ -925,23 +925,23 @@ function PlaygroundPanel({
     <>
       <SectionHeader
         title="Playground"
-        subtitle="Ubah token (layer modifikasi) — data asli yang diekstrak tidak disentuh"
+        subtitle="Ubah token (layer modifikasi). Data asli yang diekstrak tidak disentuh"
       />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button
           onClick={reset}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-fg hover:border-border-strong"
         >
           Reset
         </button>
         <button
           onClick={copyTokens}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-fg hover:border-border-strong"
         >
           {copied ? "Tersalin!" : "Salin modifikasi (JSON)"}
         </button>
         {changedCount > 0 && (
-          <span className="rounded-full bg-amber-950 px-2.5 py-1 text-xs text-amber-300">
+          <span className="rounded-full bg-warning-bg px-2.5 py-1 text-xs text-warning">
             {changedCount} token diubah
           </span>
         )}
@@ -949,40 +949,40 @@ function PlaygroundPanel({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
-          <div className="mb-2 text-xs text-zinc-500">Edit warna</div>
+          <div className="mb-2 text-xs text-faint">Edit warna</div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {Object.entries(colors).map(([orig, val]) => (
-              <label key={orig} className="rounded-xl border border-zinc-800 p-2">
+              <label key={orig} className="rounded-xl border border-border p-2">
                 <input
                   type="color"
                   value={val}
                   onChange={(e) => setColors((c) => ({ ...c, [orig]: e.target.value }))}
                   className="h-9 w-full cursor-pointer rounded-md border-0 bg-transparent"
                 />
-                <div className="mt-1 truncate font-mono text-[10px] text-zinc-500">{orig}</div>
-                <div className="truncate font-mono text-[10px] text-zinc-400">{val}</div>
+                <div className="mt-1 truncate font-mono text-2xs text-faint">{orig}</div>
+                <div className="truncate font-mono text-2xs text-muted">{val}</div>
               </label>
             ))}
           </div>
 
-          <div className="mt-4 mb-2 text-xs text-zinc-500">Edit radius</div>
+          <div className="mt-4 mb-2 text-xs text-faint">Edit radius</div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {Object.entries(radius).map(([orig, val]) => (
-              <label key={orig} className="rounded-xl border border-zinc-800 p-2">
+              <label key={orig} className="rounded-xl border border-border p-2">
                 <input
                   type="text"
                   value={val}
                   onChange={(e) => setRadius((r) => ({ ...r, [orig]: e.target.value }))}
-                  className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 font-mono text-xs outline-none focus:border-zinc-500"
+                  className="w-full rounded-md border border-border bg-canvas px-2 py-1 font-mono text-xs outline-none focus:border-border-strong"
                 />
-                <div className="mt-1 truncate font-mono text-[10px] text-zinc-500">{orig}</div>
+                <div className="mt-1 truncate font-mono text-2xs text-faint">{orig}</div>
               </label>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="mb-2 text-xs text-zinc-500">Preview modifikasi</div>
+          <div className="mb-2 text-xs text-faint">Preview modifikasi</div>
           <PreviewPanel result={modified} />
         </div>
       </div>
@@ -992,17 +992,17 @@ function PlaygroundPanel({
 
 function DarkModePanel({ result }: { result: DesignModel }) {
   const d = result.darkMode as DarkModeReport | null;
-  if (!d) return <p className="text-sm text-zinc-500">Belum dianalisis.</p>;
+  if (!d) return <p className="text-sm text-faint">Belum dianalisis.</p>;
   return (
     <>
       <div
         className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${
           d.detected
-            ? "border-emerald-800 bg-emerald-950/40 text-emerald-300"
-            : "border-zinc-700 text-zinc-400"
+            ? "border-success-border bg-success-bg text-success"
+            : "border-border text-muted"
         }`}
       >
-        <span className={`h-1.5 w-1.5 rounded-full ${d.detected ? "bg-emerald-400" : "bg-zinc-600"}`} />
+        <span className={`h-1.5 w-1.5 rounded-full ${d.detected ? "bg-success" : "bg-border-strong"}`} />
         {d.detected ? "Dark mode terdeteksi" : "Dark mode tidak terdeteksi"}
       </div>
       <div className="flex flex-col gap-2 text-sm">
@@ -1010,10 +1010,10 @@ function DarkModePanel({ result }: { result: DesignModel }) {
         <div>Class/tema dark: {d.mediaQuery ? "ada" : "tidak ada"}</div>
         {d.themeVariables.length > 0 && (
           <div>
-            <div className="mb-1 text-xs text-zinc-500">Variabel tema:</div>
+            <div className="mb-1 text-xs text-faint">Variabel tema:</div>
             <div className="flex flex-wrap gap-1">
               {d.themeVariables.slice(0, 10).map((v) => (
-                <code key={v} className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px]">
+                <code key={v} className="rounded bg-border px-1.5 py-0.5 text-xs">
                   {v}
                 </code>
               ))}
@@ -1021,7 +1021,7 @@ function DarkModePanel({ result }: { result: DesignModel }) {
           </div>
         )}
       </div>
-      <p className="mt-3 text-[11px] text-zinc-600">{d.note}</p>
+      <p className="mt-3 text-xs text-faint">{d.note}</p>
     </>
   );
 }
@@ -1054,52 +1054,52 @@ function DiffPanel({ result }: { result: DesignModel }) {
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           onClick={saveAsBaseline}
-          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+          className="rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-muted"
         >
           Simpan scan ini sebagai baseline
         </button>
         {baseline && (
           <button
             onClick={clearBaseline}
-            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-500"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted hover:border-border-strong"
           >
             Hapus baseline
           </button>
         )}
       </div>
-      {savedMsg && <p className="mb-3 text-xs text-emerald-400">{savedMsg}</p>}
+      {savedMsg && <p className="mb-3 text-xs text-success">{savedMsg}</p>}
 
       {baseline ? (
         diff ? (
           <>
-            <div className="mb-3 flex flex-wrap gap-2 text-xs text-zinc-500">
-              <span className="rounded-full border border-zinc-700 px-2.5 py-1">Baseline: {diff.a}</span>
-              <span className="rounded-full border border-zinc-700 px-2.5 py-1">Sekarang: {diff.b}</span>
+            <div className="mb-3 flex flex-wrap gap-2 text-xs text-faint">
+              <span className="rounded-full border border-border px-2.5 py-1">Baseline: {diff.a}</span>
+              <span className="rounded-full border border-border px-2.5 py-1">Sekarang: {diff.b}</span>
             </div>
             <div className="mb-3 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-emerald-300">+{diff.summary.added} ditambah</span>
-              <span className="rounded-full bg-red-950 px-2.5 py-1 text-red-300">-{diff.summary.removed} dihapus</span>
-              <span className="rounded-full bg-amber-950 px-2.5 py-1 text-amber-300">~{diff.summary.changed} berubah</span>
+              <span className="rounded-full bg-success-bg px-2.5 py-1 text-success">+{diff.summary.added} ditambah</span>
+              <span className="rounded-full bg-danger-bg px-2.5 py-1 text-danger">-{diff.summary.removed} dihapus</span>
+              <span className="rounded-full bg-warning-bg px-2.5 py-1 text-warning">~{diff.summary.changed} berubah</span>
             </div>
             <div className="flex flex-col gap-3">
               {diff.groups.map((g) => {
                 const isEmpty = g.added.length === 0 && g.removed.length === 0 && g.changed.length === 0;
                 if (isEmpty) return null;
                 return (
-                  <div key={g.category} className="rounded-xl border border-zinc-800 p-4">
+                  <div key={g.category} className="rounded-xl border border-border p-4">
                     <div className="mb-2 text-sm font-semibold capitalize">{g.category}</div>
                     {g.added.length > 0 && (
-                      <div className="mb-1 text-xs text-emerald-400">
+                      <div className="mb-1 text-xs text-success">
                         {g.added.map((a) => `${a.label}: ${a.value}`).join(" · ")}
                       </div>
                     )}
                     {g.removed.length > 0 && (
-                      <div className="mb-1 text-xs text-red-400">
+                      <div className="mb-1 text-xs text-danger">
                         {g.removed.map((a) => `${a.label}: ${a.value}`).join(" · ")}
                       </div>
                     )}
                     {g.changed.length > 0 && (
-                      <div className="text-xs text-amber-400">
+                      <div className="text-xs text-warning">
                         {g.changed.map((c) => `${c.label}: ${c.before} → ${c.after}`).join(" · ")}
                       </div>
                     )}
@@ -1107,15 +1107,15 @@ function DiffPanel({ result }: { result: DesignModel }) {
                 );
               })}
               {diff.summary.added + diff.summary.removed + diff.summary.changed === 0 && (
-                <p className="text-sm text-zinc-500">Tidak ada perbedaan yang terdeteksi.</p>
+                <p className="text-sm text-faint">Tidak ada perbedaan yang terdeteksi.</p>
               )}
             </div>
           </>
         ) : (
-          <p className="text-sm text-zinc-500">Belum ada baseline.</p>
+          <p className="text-sm text-faint">Belum ada baseline.</p>
         )
       ) : (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-faint">
           Belum ada baseline. Jalankan scan, lalu simpan sebagai baseline untuk membandingkan perubahan design system.
         </p>
       )}
@@ -1124,9 +1124,9 @@ function DiffPanel({ result }: { result: DesignModel }) {
 }
 
 function ratingColor(v: number): { text: string; bg: string } {
-  if (v >= 80) return { text: "text-success", bg: "bg-emerald-950" };
-  if (v >= 60) return { text: "text-warning", bg: "bg-amber-950" };
-  return { text: "text-danger", bg: "bg-red-950" };
+  if (v >= 80) return { text: "text-success", bg: "bg-success-bg" };
+  if (v >= 60) return { text: "text-warning", bg: "bg-warning-bg" };
+  return { text: "text-danger", bg: "bg-danger-bg" };
 }
 
 function RatioCard({
@@ -1146,7 +1146,7 @@ function RatioCard({
         <span className="text-xs text-faint">/100</span>
       </div>
       <div className="mt-1 text-sm font-medium text-fg">{label}</div>
-      {note && <div className="mt-0.5 text-[11px] text-faint">{note}</div>}
+      {note && <div className="mt-0.5 text-xs text-faint">{note}</div>}
     </div>
   );
 }
@@ -1254,7 +1254,7 @@ function OverviewPanel({ result, onVoice }: { result: DesignModel; onVoice: () =
                 className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-fg transition-colors hover:border-border-strong"
               >
                 {c.name}
-                <span className="ml-1.5 rounded bg-canvas px-1.5 py-0.5 text-[11px] text-faint">
+                <span className="ml-1.5 rounded bg-canvas px-1.5 py-0.5 text-xs text-faint">
                   x{c.count}
                 </span>
               </button>
@@ -1274,9 +1274,9 @@ function OverviewPanel({ result, onVoice }: { result: DesignModel; onVoice: () =
                 key={i}
                 className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${
                   iss.severity === "critical"
-                    ? "border-red-900/50 bg-red-950/30 text-danger"
+                    ? "border-danger-border bg-danger-bg text-danger"
                     : iss.severity === "warning"
-                      ? "border-amber-900/40 bg-amber-950/20 text-warning"
+                      ? "border-warning-border bg-warning-bg text-warning"
                       : "border-border bg-surface text-muted"
                 }`}
               >
@@ -1287,7 +1287,7 @@ function OverviewPanel({ result, onVoice }: { result: DesignModel; onVoice: () =
               </div>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-faint">
+          <p className="mt-2 text-xs text-faint">
             Buka tab Aksesibilitas, Responsif, atau Health untuk detail.
           </p>
         </div>
@@ -1328,13 +1328,13 @@ function PagesPanel({ result }: { result: DesignModel }) {
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-sm font-medium text-fg">{p.title || p.url}</span>
               {p.status === "ok" ? (
-                <span className="shrink-0 text-[10px] text-success">ok</span>
+                <span className="shrink-0 text-2xs text-success">ok</span>
               ) : (
-                <span className="shrink-0 text-[10px] text-danger">error</span>
+                <span className="shrink-0 text-2xs text-danger">error</span>
               )}
             </div>
-            <div className="truncate font-mono text-[11px] text-faint">{p.url}</div>
-            <div className="mt-0.5 text-[11px] text-muted">{summary(p.scores)}</div>
+            <div className="truncate font-mono text-xs text-faint">{p.url}</div>
+            <div className="mt-0.5 text-xs text-muted">{summary(p.scores)}</div>
           </button>
         ))}
       </div>
@@ -1354,7 +1354,7 @@ function PagesPanel({ result }: { result: DesignModel }) {
               </a>
             </div>
             {active.status !== "ok" && active.error && (
-              <span className="rounded-md bg-red-950 px-2 py-1 text-xs text-danger">
+              <span className="rounded-md bg-danger-bg px-2 py-1 text-xs text-danger">
                 {active.error}
               </span>
             )}
@@ -1373,7 +1373,7 @@ function PagesPanel({ result }: { result: DesignModel }) {
               return (
                 <div key={label} className="rounded-lg border border-border bg-surface p-3">
                   <div className={`text-lg font-bold ${c.text}`}>{v}</div>
-                  <div className="text-[11px] text-faint">{label}</div>
+                  <div className="text-xs text-faint">{label}</div>
                 </div>
               );
             })}
@@ -1410,7 +1410,7 @@ function PagesPanel({ result }: { result: DesignModel }) {
                     className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-surface px-3 py-2 text-xs"
                   >
                     <span className="max-w-[220px] truncate font-mono text-faint">{s.url}</span>
-                    <span className="rounded bg-canvas px-1.5 py-0.5 text-[10px] text-muted">{s.kind}</span>
+                    <span className="rounded bg-canvas px-1.5 py-0.5 text-2xs text-muted">{s.kind}</span>
                     <span className="text-faint">
                       {(s.sizeBytes / 1024).toFixed(1)} KB · {s.ruleCount} rules ·{" "}
                       {s.declarationCount} decl
@@ -1429,13 +1429,13 @@ function PagesPanel({ result }: { result: DesignModel }) {
 
 function HealthPanel({ result }: { result: DesignModel }) {
   const health = result.health as HealthReport | null;
-  if (!health) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
+  if (!health) return <p className="text-sm text-faint">Belum dihitung.</p>;
   const cats = [health.color, health.typography, health.spacing, health.radius, health.component];
   return (
     <>
-      <div className="mb-4 rounded-xl border border-zinc-800 p-4">
+      <div className="mb-4 rounded-xl border border-border p-4">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-zinc-400">Design Health</span>
+          <span className="text-sm font-medium text-muted">Design Health</span>
           <HealthBar value={health.overall} />
         </div>
       </div>
@@ -1450,9 +1450,9 @@ function HealthPanel({ result }: { result: DesignModel }) {
 
 function A11yPanel({ result }: { result: DesignModel }) {
   const a11y = result.accessibility as A11yReport | null;
-  if (!a11y) return <p className="text-sm text-zinc-500">Belum dihitung.</p>;
+  if (!a11y) return <p className="text-sm text-faint">Belum dihitung.</p>;
   const gauge = (v: number) => {
-    const color = v === 0 ? "bg-emerald-500" : v <= 2 ? "bg-amber-500" : "bg-red-500";
+    const color = v === 0 ? "bg-success" : v <= 2 ? "bg-warning" : "bg-danger";
     return (
       <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${color}`}>{v}</span>
     );
@@ -1461,14 +1461,14 @@ function A11yPanel({ result }: { result: DesignModel }) {
     <>
       <SectionHeader title="Aksesibilitas (WCAG)" subtitle="Analisis otomatis berbasis token kontras" />
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-zinc-800 p-4">
-          <div className="mb-2 text-xs text-zinc-500">WCAG AA (teks kecil 4.5:1)</div>
+        <div className="rounded-xl border border-border p-4">
+          <div className="mb-2 text-xs text-faint">WCAG AA (teks kecil 4.5:1)</div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             Gagal {gauge(a11y.wcagAA.critical)} &nbsp; Peringatan {gauge(a11y.wcagAA.warning)} &nbsp; Lolos {gauge(a11y.wcagAA.pass)}
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-800 p-4">
-          <div className="mb-2 text-xs text-zinc-500">WCAG AAA (7:1)</div>
+        <div className="rounded-xl border border-border p-4">
+          <div className="mb-2 text-xs text-faint">WCAG AAA (7:1)</div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             Gagal {gauge(a11y.wcagAAA.critical)} &nbsp; Peringatan {gauge(a11y.wcagAAA.warning)} &nbsp; Lolos {gauge(a11y.wcagAAA.pass)}
           </div>
@@ -1476,15 +1476,15 @@ function A11yPanel({ result }: { result: DesignModel }) {
       </div>
       <div className="flex flex-col gap-2">
         {a11y.issues.map((iss, i) => (
-          <div key={i} className="rounded-xl border border-zinc-800 p-3">
+          <div key={i} className="rounded-xl border border-border p-3">
             <div className="flex items-center gap-2">
               <span
-                className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                className={`rounded px-2 py-0.5 text-2xs font-bold uppercase ${
                   iss.severity === "critical"
-                    ? "bg-red-500 text-white"
+                    ? "bg-danger text-canvas"
                     : iss.severity === "warning"
-                      ? "bg-amber-500 text-black"
-                      : "bg-zinc-600 text-white"
+                      ? "bg-warning text-canvas"
+                      : "bg-border-strong text-canvas"
                 }`}
               >
                 {iss.severity}
@@ -1492,14 +1492,14 @@ function A11yPanel({ result }: { result: DesignModel }) {
               <span className="text-sm font-medium">{iss.kind}</span>
             </div>
             <p className="mt-1 text-sm">{iss.message}</p>
-            {iss.recommendation && <p className="mt-1 text-xs text-zinc-400">{iss.recommendation}</p>}
+            {iss.recommendation && <p className="mt-1 text-xs text-muted">{iss.recommendation}</p>}
             {iss.evidence.length > 0 && (
-              <code className="mt-1 block text-[11px] text-zinc-500">{iss.evidence.join(" · ")}</code>
+              <code className="mt-1 block text-xs text-faint">{iss.evidence.join(" · ")}</code>
             )}
           </div>
         ))}
       </div>
-      <p className="mt-3 text-[11px] text-zinc-600">{a11y.note}</p>
+      <p className="mt-3 text-xs text-faint">{a11y.note}</p>
     </>
   );
 }
@@ -1564,13 +1564,13 @@ function ExportPanel({ result }: { result: DesignModel }) {
         <div className="flex gap-2">
           <button
             onClick={downloadPackZip}
-            className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-400"
+            className="rounded-lg bg-brand-500 px-4 py-2 text-xs font-semibold text-on-brand hover:bg-brand-600"
           >
             Download Design Pack (.zip)
           </button>
           <button
             onClick={downloadZip}
-            className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white"
+            className="rounded-lg bg-fg px-4 py-2 text-xs font-semibold text-canvas hover:bg-muted"
           >
             Download semua (.zip)
           </button>
@@ -1580,19 +1580,19 @@ function ExportPanel({ result }: { result: DesignModel }) {
         {Object.entries(files).map(([key]) => (
           <div
             key={key}
-            className="flex items-center justify-between rounded-xl border border-zinc-800 px-4 py-2.5"
+            className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5"
           >
             <code className="text-sm">{key}</code>
             <div className="flex gap-2">
               <button
                 onClick={() => copy(key)}
-                className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                className="rounded-lg border border-border px-2.5 py-1 text-xs text-fg hover:border-border-strong"
               >
                 {copied === key ? "Tersalin!" : "Salin"}
               </button>
               <button
                 onClick={() => download(key)}
-                className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-900 hover:bg-white"
+                className="rounded-lg bg-fg px-2.5 py-1 text-xs font-semibold text-canvas hover:bg-muted"
               >
                 Download
               </button>
@@ -1613,18 +1613,18 @@ function SpecPanel({ result }: { result: DesignModel }) {
       <div className="flex items-center justify-between">
         <SectionHeader
           title="Design Specification"
-          subtitle="Spesifikasi desain kanonik (nullable output downstream) — bukan artifact scraper mentah"
+          subtitle="Spesifikasi desain kanonik (nullable output downstream), bukan artifact scraper mentah"
         />
         <button
           onClick={() => setShowCode((s) => !s)}
-          className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+          className="rounded-lg border border-border px-3 py-1 text-xs text-fg hover:border-border-strong"
         >
           {showCode ? "Lihat ringkasan" : "Lihat JSON"}
         </button>
       </div>
 
       {showCode ? (
-        <pre className="max-h-[28rem] overflow-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300">
+        <pre className="max-h-[28rem] overflow-auto rounded-xl border border-border bg-canvas p-4 text-xs text-fg">
           {JSON.stringify(spec, null, 2)}
         </pre>
       ) : (
@@ -1637,7 +1637,7 @@ function SpecPanel({ result }: { result: DesignModel }) {
           <SpecBlock title="Visual Language">
             <SpecKV k="Warna primer" v={String(spec.visual_language.colors.primary.length)} />
             <SpecKV k="Warna netral" v={String(spec.visual_language.colors.neutral.length)} />
-            <SpecKV k="Font family" v={spec.visual_language.typography.families.join(", ") || "—"} />
+            <SpecKV k="Font family" v={spec.visual_language.typography.families.join(", ") || "-"} />
             <SpecKV k="Ukuran font" v={String(spec.visual_language.typography.sizes.length)} />
             <SpecKV k="Dark mode" v={spec.visual_language.darkMode.detected ? "Terdeteksi" : "Tidak terdeteksi"} />
           </SpecBlock>
@@ -1646,7 +1646,7 @@ function SpecPanel({ result }: { result: DesignModel }) {
               {spec.layout.containers.length ? (
                 spec.layout.containers.map((c) => <Chip key={c}>{c}</Chip>)
               ) : (
-                <span className="text-xs text-zinc-500">Tidak ada kontainer terdeteksi</span>
+                <span className="text-xs text-faint">Tidak ada kontainer terdeteksi</span>
               )}
             </div>
           </SpecBlock>
@@ -1655,7 +1655,7 @@ function SpecPanel({ result }: { result: DesignModel }) {
               {spec.components.length ? (
                 spec.components.slice(0, 20).map((c) => <Chip key={c.name}>{c.name}</Chip>)
               ) : (
-                <span className="text-xs text-zinc-500">Tidak ada komponen terdeteksi</span>
+                <span className="text-xs text-faint">Tidak ada komponen terdeteksi</span>
               )}
             </div>
           </SpecBlock>
@@ -1664,7 +1664,7 @@ function SpecPanel({ result }: { result: DesignModel }) {
               {spec.interactions.length ? (
                 spec.interactions.map((i) => <Chip key={i.interaction}>{i.interaction}</Chip>)
               ) : (
-                <span className="text-xs text-zinc-500">Tidak ada interaksi terdeteksi</span>
+                <span className="text-xs text-faint">Tidak ada interaksi terdeteksi</span>
               )}
             </div>
           </SpecBlock>
@@ -1679,14 +1679,14 @@ function SpecPanel({ result }: { result: DesignModel }) {
           <SpecBlock title="Implementation Hints">
             <ul className="flex flex-col gap-1">
               {spec.implementation_hints.slice(0, 8).map((h) => (
-                <li key={h.code} className="text-xs text-zinc-400">
+                <li key={h.code} className="text-xs text-muted">
                   <span
-                    className={`mr-1.5 rounded px-1 py-0.5 text-[10px] font-semibold ${
+                    className={`mr-1.5 rounded px-1 py-0.5 text-2xs font-semibold ${
                       h.severity === "critical"
-                        ? "bg-red-500/15 text-red-300"
+                        ? "bg-danger-bg text-danger"
                         : h.severity === "warning"
-                          ? "bg-amber-500/15 text-amber-300"
-                          : "bg-zinc-700 text-zinc-300"
+                          ? "bg-warning-bg text-warning"
+                          : "bg-border-strong text-fg"
                     }`}
                   >
                     {h.severity}
@@ -1707,7 +1707,7 @@ function ProjectPanel({ result }: { result: DesignModel }) {
   const spec = useMemo(() => buildDesignSpecification(result), [result]);
 
   const badgeColor =
-    readiness.score >= 80 ? "bg-emerald-500/15 text-emerald-300" : readiness.score >= 50 ? "bg-amber-500/15 text-amber-300" : "bg-red-500/15 text-red-300";
+    readiness.score >= 80 ? "bg-success-bg text-success" : readiness.score >= 50 ? "bg-warning-bg text-warning" : "bg-danger-bg text-danger";
 
   return (
     <div className="flex flex-col gap-4">
@@ -1727,25 +1727,25 @@ function ProjectPanel({ result }: { result: DesignModel }) {
         </SpecBlock>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 p-4">
+      <div className="rounded-xl border border-border p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Readiness</h3>
           <span className={`rounded-full px-3 py-1 text-xs font-bold ${badgeColor}`}>
             {readiness.score}/100
           </span>
         </div>
-        <p className="mt-1 text-xs text-zinc-500">{readiness.summary}</p>
+        <p className="mt-1 text-xs text-faint">{readiness.summary}</p>
         <div className="mt-4 space-y-2">
           {readiness.dimensions.map((d) => (
             <div key={d.key}>
               <div className="mb-1 flex items-center justify-between text-xs">
-                <span className="text-zinc-300">{d.label}</span>
+                <span className="text-fg">{d.label}</span>
                 <span className="font-mono text-faint">{d.detail}</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full ${
-                    d.ratio >= 0.8 ? "bg-emerald-500" : d.ratio >= 0.4 ? "bg-amber-500" : "bg-red-500"
+                    d.ratio >= 0.8 ? "bg-success" : d.ratio >= 0.4 ? "bg-warning" : "bg-danger"
                   }`}
                   style={{ width: `${Math.round(d.ratio * 100)}%` }}
                 />
@@ -1760,7 +1760,7 @@ function ProjectPanel({ result }: { result: DesignModel }) {
 
 function SpecBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-800 p-4">
+    <div className="rounded-xl border border-border p-4">
       <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-faint">{title}</h4>
       <div className="space-y-1.5">{children}</div>
     </div>
@@ -1770,15 +1770,15 @@ function SpecBlock({ title, children }: { title: string; children: ReactNode }) 
 function SpecKV({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span className="text-xs text-zinc-500">{k}</span>
-      <span className="truncate font-mono text-xs text-zinc-300">{v}</span>
+      <span className="text-xs text-faint">{k}</span>
+      <span className="truncate font-mono text-xs text-fg">{v}</span>
     </div>
   );
 }
 
 function Chip({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded-md border border-zinc-700 px-2 py-0.5 text-xs text-zinc-300">{children}</span>
+    <span className="rounded-md border border-border px-2 py-0.5 text-xs text-fg">{children}</span>
   );
 }
 
@@ -1832,12 +1832,12 @@ function HistoryPanel({
     <>
       <SectionHeader
         title="Riwayat scan"
-        subtitle="Scan tersimpan di browser — fondasi untuk melacak perubahan (drift)"
+        subtitle="Scan tersimpan di browser, fondasi untuk melacak perubahan (drift)"
       />
       <div className="mb-3 flex flex-wrap gap-2">
         <button
           onClick={handleSave}
-          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+          className="rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-muted"
         >
           Simpan scan ini
         </button>
@@ -1848,22 +1848,22 @@ function HistoryPanel({
               refresh();
               flash("Semua riwayat dihapus.");
             }}
-            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-500"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted hover:border-border-strong"
           >
             Hapus semua
           </button>
         )}
       </div>
-      {msg && <p className="mb-3 text-xs text-emerald-400">{msg}</p>}
+      {msg && <p className="mb-3 text-xs text-success">{msg}</p>}
 
       {sessions.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-faint">
           Belum ada scan tersimpan. Tekan {"“Simpan scan ini”"} untuk menyimpan hasil saat ini.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
           {sessions.map((s) => (
-            <div key={s.id} className="rounded-xl border border-zinc-800 px-4 py-2.5">
+            <div key={s.id} className="rounded-xl border border-border px-4 py-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 {editingId === s.id ? (
                   <input
@@ -1873,12 +1873,12 @@ function HistoryPanel({
                       if (e.key === "Enter") handleRename(s.id);
                     }}
                     autoFocus
-                    className="w-48 rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs outline-none focus:border-zinc-500"
+                    className="w-48 rounded-md border border-border bg-canvas px-2 py-1 text-xs outline-none focus:border-border-strong"
                   />
                 ) : (
                   <div>
                     <div className="text-sm font-medium">{s.name}</div>
-                    <div className="text-[11px] text-zinc-500">
+                    <div className="text-xs text-faint">
                       {s.url} · {new Date(s.createdAt).toLocaleString("id-ID")}
                     </div>
                   </div>
@@ -1886,7 +1886,7 @@ function HistoryPanel({
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     onClick={() => handleLoad(s.id)}
-                    className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-900 hover:bg-white"
+                    className="rounded-lg bg-fg px-2.5 py-1 text-xs font-semibold text-canvas hover:bg-muted"
                   >
                     Muat
                   </button>
@@ -1895,13 +1895,13 @@ function HistoryPanel({
                       setEditingId(s.id);
                       setEditingName(s.name);
                     }}
-                    className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                    className="rounded-lg border border-border px-2.5 py-1 text-xs text-fg hover:border-border-strong"
                   >
                     Rename
                   </button>
                   <button
                     onClick={() => handleDelete(s.id)}
-                    className="rounded-lg border border-red-900/40 px-2.5 py-1 text-xs text-red-400 hover:border-red-700"
+                    className="rounded-lg border border-danger-border px-2.5 py-1 text-xs text-danger hover:border-danger-border"
                   >
                     Hapus
                   </button>
@@ -1970,7 +1970,7 @@ function DriftPanel({
         .filter((s) => s.url === current.source.url)
         .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)),
     );
-    flashMsg("Snapshot tersimpan — drift dihitung otomatis.");
+    flashMsg("Snapshot tersimpan. Drift dihitung otomatis.");
   }
 
   return (
@@ -1982,30 +1982,30 @@ function DriftPanel({
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button
           onClick={handleSnapshot}
-          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white"
+          className="rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-muted"
         >
           Simpan snapshot drift
         </button>
         {timeline.length > 1 && (
-          <span className="rounded-full bg-amber-950 px-3 py-1 text-xs text-amber-300">
+          <span className="rounded-full bg-warning-bg px-3 py-1 text-xs text-warning">
             Total drift: +{totalDrift.added} / -{totalDrift.removed} / ~{totalDrift.changed}
           </span>
         )}
       </div>
-      {flash && <p className="mb-3 text-xs text-emerald-400">{flash}</p>}
+      {flash && <p className="mb-3 text-xs text-success">{flash}</p>}
 
       {timeline.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-faint">
           Belum ada snapshot untuk URL ini. Simpan snapshot pertama untuk mulai melacak drift design system.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
           {[...timeline].reverse().map((e, idx) => (
-            <div key={e.session.id} className="rounded-xl border border-zinc-800 p-3">
+            <div key={e.session.id} className="rounded-xl border border-border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <div className="text-sm font-medium">{e.session.name}</div>
-                  <div className="text-[11px] text-zinc-500">
+                  <div className="text-xs text-faint">
                     {new Date(e.session.createdAt).toLocaleString("id-ID")}
                   </div>
                 </div>
@@ -2013,17 +2013,17 @@ function DriftPanel({
                   {idx === 0 && (
                     <button
                       onClick={() => onLoad(e.session.model)}
-                      className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                      className="rounded-lg border border-border px-2.5 py-1 text-xs text-fg hover:border-border-strong"
                     >
                       Muat
                     </button>
                   )}
                   {e.delta && e.prev && (
                     <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         e.delta.summary.added + e.delta.summary.removed + e.delta.summary.changed === 0
-                          ? "bg-emerald-950 text-emerald-300"
-                          : "bg-amber-950 text-amber-300"
+                          ? "bg-success-bg text-success"
+                          : "bg-warning-bg text-warning"
                       }`}
                     >
                       +{e.delta.summary.added} / -{e.delta.summary.removed} / ~{e.delta.summary.changed}
@@ -2032,15 +2032,15 @@ function DriftPanel({
                 </div>
               </div>
               {e.delta && e.prev && e.delta.groups.some((g) => g.added.length + g.removed.length + g.changed.length > 0) && (
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                   {e.delta.groups
                     .filter((g) => g.added.length + g.removed.length + g.changed.length > 0)
                     .map((g) => (
                       <span key={g.category}>
-                        <span className="text-zinc-300">{g.category}</span>:{" "}
-                        <span className="text-emerald-400">+{g.added.length}</span>{" "}
-                        <span className="text-red-400">-{g.removed.length}</span>{" "}
-                        <span className="text-amber-400">~{g.changed.length}</span>
+                        <span className="text-fg">{g.category}</span>:{" "}
+                        <span className="text-success">+{g.added.length}</span>{" "}
+                        <span className="text-danger">-{g.removed.length}</span>{" "}
+                        <span className="text-warning">~{g.changed.length}</span>
                       </span>
                     ))}
                 </div>
@@ -2236,21 +2236,21 @@ function AiPanel({
         <button
           onClick={() => generate("readme")}
           disabled={busy}
-          className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-60"
+          className="rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-muted disabled:opacity-60"
         >
           {busy ? "Menghasilkan…" : "Generate README dengan AI"}
         </button>
         <button
           onClick={() => generate("review")}
           disabled={busy}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-500 disabled:opacity-60"
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-fg hover:border-border-strong disabled:opacity-60"
         >
           Tinjau desain
         </button>
         <button
           onClick={recommend}
           disabled={busy}
-          className="rounded-lg border border-emerald-700 px-3 py-1.5 text-xs text-emerald-300 hover:border-emerald-500 disabled:opacity-60"
+          className="rounded-lg border border-success-border px-3 py-1.5 text-xs text-success hover:border-success disabled:opacity-60"
         >
           {busy ? "Menyusun…" : "Rekomendasi perbaikan"}
         </button>
@@ -2258,7 +2258,7 @@ function AiPanel({
       </div>
 
       <div className="mb-4">
-        <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-faint">
           Konteks AI yang disertakan
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -2270,8 +2270,8 @@ function AiPanel({
                 onClick={() => toggleSection(o.id)}
                 className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                   on
-                    ? "border-zinc-400 bg-zinc-700 text-white"
-                    : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
+                    ? "border-fg bg-fg text-canvas"
+                    : "border-border text-faint hover:border-border-strong"
                 }`}
               >
                 {on ? "✓ " : ""}
@@ -2282,48 +2282,48 @@ function AiPanel({
         </div>
       </div>
 
-      {switchedNote && <p className="mb-3 text-xs text-amber-400">{switchedNote}</p>}
-      {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
+      {switchedNote && <p className="mb-3 text-xs text-warning">{switchedNote}</p>}
+      {error && <p className="mb-3 text-sm text-danger">{error}</p>}
 
-      {recommendError && <p className="mb-3 text-sm text-red-400">{recommendError}</p>}
+      {recommendError && <p className="mb-3 text-sm text-danger">{recommendError}</p>}
 
       {recommendation && recommendation.changes.length > 0 && (
-        <div className="mb-5 rounded-xl border border-emerald-800 bg-emerald-950/20 p-4">
+        <div className="mb-5 rounded-xl border border-success-border bg-success-bg p-4">
           <div className="mb-2 flex items-center justify-between">
-            <div className="text-sm font-semibold text-emerald-300">Rekomendasi perbaikan</div>
+            <div className="text-sm font-semibold text-success">Rekomendasi perbaikan</div>
             <button
               onClick={applyRecommendation}
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+              className="rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-brand-600"
             >
               Terapkan ke Playground →
             </button>
           </div>
           <div className="flex flex-col gap-2">
             {recommendation.changes.map((ch, i) => (
-              <div key={i} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-lg bg-black/30 px-3 py-2 text-xs">
-                <code className="text-zinc-400">{ch.key}</code>
-                <span className="text-zinc-500">→</span>
-                <code className="text-emerald-300">{ch.value}</code>
-                <span className="text-[11px] text-zinc-500">({ch.type})</span>
-                {ch.reason && <span className="w-full text-[11px] text-zinc-400">{ch.reason}</span>}
+              <div key={i} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded-lg bg-surface-2 px-3 py-2 text-xs">
+                <code className="text-muted">{ch.key}</code>
+                <span className="text-faint">→</span>
+                <code className="text-success">{ch.value}</code>
+                <span className="text-xs text-faint">({ch.type})</span>
+                {ch.reason && <span className="w-full text-xs text-muted">{ch.reason}</span>}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="mb-5 rounded-xl border border-zinc-800 bg-zinc-950 p-3">
-        <div className="mb-2 text-[11px] uppercase tracking-wide text-zinc-500">
-          AI Chat — grounded di DesignModel ({result.source.title})
+      <div className="mb-5 rounded-xl border border-border bg-canvas p-3">
+        <div className="mb-2 text-xs uppercase tracking-wide text-faint">
+          AI Chat, grounded di DesignModel ({result.source.title})
         </div>
         <div className="mb-2 flex max-h-64 flex-col gap-2 overflow-auto">
           {chatHistory.length === 0 && (
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-faint">
               Contoh: {"“Kenapa desain ini terasa tidak konsisten?”, “Cari outlier spacing.”, “Apa yang salah di mobile?”, “Generate DESIGN.md.”"}
             </p>
           )}
           {chatHistory.map((c, i) => (
-            <div key={i} className={`text-xs leading-5 ${c.role === "ai" ? "text-zinc-300" : "text-zinc-100"}`}>
+            <div key={i} className={`text-xs leading-5 ${c.role === "ai" ? "text-fg" : "text-fg"}`}>
               <span className="mr-1 font-semibold">{c.role === "ai" ? "AI" : "Kamu"}:</span>
               <span className="whitespace-pre-wrap">{c.text || (busy && i === chatHistory.length - 1 ? "…" : "")}</span>
             </div>
@@ -2337,12 +2337,12 @@ function AiPanel({
               if (e.key === "Enter") sendChat();
             }}
             placeholder="Tanya tentang design system ini…"
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
+            className="flex-1 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none placeholder:text-faint focus:border-border-strong"
           />
           <button
             onClick={sendChat}
             disabled={busy || !chatInput.trim()}
-            className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-50"
+            className="rounded-lg bg-fg px-4 py-2 text-xs font-semibold text-canvas hover:bg-muted disabled:opacity-50"
           >
             {busy ? "Mengetik…" : "Kirim"}
           </button>
@@ -2354,12 +2354,12 @@ function AiPanel({
           <div className="mb-2 flex justify-end">
             <button
               onClick={copy}
-              className="rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+              className="rounded-lg border border-border px-2.5 py-1 text-xs text-fg hover:border-border-strong"
             >
               {copied ? "Tersalin!" : "Salin"}
             </button>
           </div>
-          <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs leading-6 text-zinc-300">
+          <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-canvas p-4 text-xs leading-6 text-fg">
             {output}
           </pre>
         </>
@@ -2476,85 +2476,128 @@ export function FullReport({
     },
   ];
 
+  const activeTabLabel =
+    tabGroups.flatMap((g) => g.items).find((i) => i.id === tab)?.label ?? "";
+  const scores = result.pages[0]?.scores;
+  const scoreCells: Array<[string, number]> = [
+    ["Warna", scores?.color ?? 0],
+    ["Tipografi", scores?.typography ?? 0],
+    ["Radius", scores?.radius ?? 0],
+    ["Keseluruhan", scores?.overall ?? 0],
+  ];
+
   return (
-<section className="rounded-2xl border border-border bg-surface p-5">
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">{result.source.title}</h2>
-          <a
-            href={result.source.url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-zinc-500 hover:text-zinc-300"
-          >
-            {result.source.url}
-          </a>
-        </div>
-        {results.length > 1 && (
-          <div className="flex flex-wrap gap-1.5">
-            {results.map((r, i) => (
-              <button
-                key={r.source.url}
-                onClick={() => setActiveIndex(i)}
-                className={`rounded-lg border px-2.5 py-1 text-xs ${
-                  i === activeIndex
-                    ? "border-zinc-500 bg-zinc-700 text-white"
-                    : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+    <section className="flex flex-col gap-4">
+      {/* ------------------------------------------------- report identity */}
+      <div className="card p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="truncate text-2xl font-bold tracking-tight text-fg">
+              {result.source.title}
+            </h2>
+            <a
+              href={result.source.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-0.5 inline-block max-w-full truncate font-mono text-xs text-faint underline-offset-2 transition-colors hover:text-brand-500 hover:underline"
+            >
+              {result.source.url}
+            </a>
           </div>
-        )}
-      </div>
-
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {(
-          [
-            ["Warna", result.pages[0]?.scores?.color ?? 0],
-            ["Tipografi", result.pages[0]?.scores?.typography ?? 0],
-            ["Radius", result.pages[0]?.scores?.radius ?? 0],
-            ["Keseluruhan", result.pages[0]?.scores?.overall ?? 0],
-          ] as Array<[string, number]>
-        ).map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-zinc-800 p-3">
-            <div className="text-xs text-zinc-500">{label}</div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-lg font-bold">{value}</span>
-              <ScoreBar value={value} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-<div className="mb-5 flex flex-col gap-2">
-        {tabGroups.map((g) => (
-          <div key={g.label} className="flex flex-wrap items-center gap-1.5">
-            <span className="w-20 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-faint">
-              {g.label}
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {g.items.map((item) => (
+          {results.length > 1 && (
+            <div
+              className="flex shrink-0 flex-wrap gap-1"
+              role="group"
+              aria-label="Pilih hasil scan"
+            >
+              {results.map((r, i) => (
                 <button
-                  key={item.id}
-                  onClick={() => setTab(item.id)}
-                  aria-current={tab === item.id ? "page" : undefined}
-                  className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                    tab === item.id
-                      ? "border-brand-500 bg-brand-500/15 font-medium text-brand-300"
-                      : "border-transparent text-muted hover:bg-surface hover:text-fg"
-                  }`}
+                  key={r.source.url}
+                  onClick={() => setActiveIndex(i)}
+                  aria-pressed={i === activeIndex}
+                  className="chip"
                 >
-                  {item.label}
+                  {i + 1}
                 </button>
               ))}
             </div>
-          </div>
-        ))}
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {scoreCells.map(([label, value]) => (
+            <div key={label} className="card-quiet p-3">
+              <div className="text-xs text-faint">{label}</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-xl font-extrabold tabular-nums text-fg">{value}</span>
+                <ScoreBar value={value} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-<div className="mt-6">
+      {/* ------------------------------------------- navigation + panel */}
+      <div className="grid gap-4 lg:grid-cols-[188px_minmax(0,1fr)] lg:items-start">
+        {/* Under lg the 22 sections collapse into a grouped picker. */}
+        <div className="lg:hidden">
+          <label htmlFor="report-section" className="label mb-1.5">
+            Bagian laporan
+          </label>
+          <select
+            id="report-section"
+            value={tab}
+            onChange={(e) => setTab(e.target.value as Tab)}
+            className="field"
+          >
+            {tabGroups.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        <nav
+          aria-label="Bagian laporan"
+          className="hidden lg:sticky lg:top-[72px] lg:block lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1"
+        >
+          <div className="flex flex-col gap-4">
+            {tabGroups.map((g) => (
+              <div key={g.label}>
+                <div className="eyebrow mb-1.5 px-2">{g.label}</div>
+                <ul className="flex flex-col gap-0.5">
+                  {g.items.map((item) => {
+                    const active = tab === item.id;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => setTab(item.id)}
+                          aria-current={active ? "page" : undefined}
+                          className={`w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                            active
+                              ? "bg-brand-500 font-semibold text-on-brand"
+                              : "text-muted hover:bg-surface-2 hover:text-fg"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
+
+        <div className="card min-w-0 p-5">
+          <h3 className="sr-only">{activeTabLabel}</h3>
+          <div key={tab} className="animate-fade">
         {tab === "overview" && (
           <OverviewPanel result={result} onVoice={() => setTab("components")} />
         )}
@@ -2591,6 +2634,8 @@ export function FullReport({
             onGoToPlayground={() => setTab("playground")}
           />
         )}
+          </div>
+        </div>
       </div>
     </section>
   );

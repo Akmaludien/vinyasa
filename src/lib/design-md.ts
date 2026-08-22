@@ -88,7 +88,7 @@ export function buildDesignMd(r: DesignModel, opts?: MdOptions): string {
           healthOverall: "Overall score",
           category: "Category",
           a11yTitle: "Accessibility (WCAG)",
-          a11yNote: "Automatic analysis — not an official WCAG certification.",
+          a11yNote: "Automatic analysis, not an official WCAG certification.",
           fail: "fail",
           warning: "warning",
           pass: "pass",
@@ -143,7 +143,7 @@ export function buildDesignMd(r: DesignModel, opts?: MdOptions): string {
           healthOverall: "Skor keseluruhan",
           category: "Kategori",
           a11yTitle: "Aksesibilitas (WCAG)",
-          a11yNote: "Analisis otomatis — bukan sertifikasi WCAG resmi.",
+          a11yNote: "Analisis otomatis, bukan sertifikasi WCAG resmi.",
           fail: "gagal",
           warning: "peringatan",
           pass: "lolos",
@@ -165,7 +165,7 @@ export function buildDesignMd(r: DesignModel, opts?: MdOptions): string {
   const dateStr = new Date(r.metadata.generatedAt).toLocaleString(lang === "en" ? "en-US" : "id-ID");
   const lines: string[] = [];
 
-  lines.push(`# Design System — ${r.source.title}`);
+  lines.push(`# Design System: ${r.source.title}`);
   lines.push("");
   lines.push(`> ${L.extractedFrom} **${r.source.url}** ${L.at} ${dateStr}.`);
   lines.push("");

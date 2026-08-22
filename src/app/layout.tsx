@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vinyasa — Design Intelligence Platform",
+  title: "Vinyasa · Design Intelligence Platform",
   description:
     "Ubah website apa pun menjadi design system yang cerdas, dapat digunakan kembali: token, komponen, health, aksesibilitas, responsif, dan AI.",
   icons: {
@@ -23,13 +23,32 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Applied before paint so the stored theme never flashes the wrong palette.
+ * Light is the product default: dark is opt-in through the toggle, not
+ * inherited from the OS, so a first visit always looks the same.
+ */
+const themeBootstrap = `(function(){try{if(localStorage.getItem("vinyasa.theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-canvas font-sans text-fg">
+      <head>
+        {/* Inline in <head> on purpose: it must run before <body> is parsed so
+            the stored theme is applied in the same frame as first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
+      <body className="min-h-full font-sans text-fg">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-brand-500 focus:px-3 focus:py-2 focus:text-xs focus:font-semibold focus:text-on-brand"
+        >
+          Lewati ke konten
+        </a>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

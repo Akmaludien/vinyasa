@@ -133,7 +133,7 @@ export function detectComponents(
     components: components.slice(0, 20),
     patterns,
     note:
-      "Deteksi berbasis heuristik selector (nama class). Bukan kepastian — interpretasi manual tetap disarankan untuk tata letak yang kompleks.",
+      "Deteksi berbasis heuristik selector (nama class). Bukan kepastian. Interpretasi manual tetap disarankan untuk tata letak yang kompleks.",
   };
 }
 
@@ -242,6 +242,6 @@ function dependenciesFor(name: string, selectors: string[]): string[] {
 function hintsFor(name: string, count: number, variants: number): string[] {
   const hints: string[] = [];
   if (variants > 1) hints.push(`Gunakan varian (${variants} terdeteksi) sebagai modifier, bukan duplikasi.`);
-  if (count === 1) hints.push("Muncul sekali — validasi apakah benar komponen atau halaman khusus.");
+  if (count === 1) hints.push("Muncul sekali. Validasi apakah benar komponen atau halaman khusus.");
   return hints;
 }

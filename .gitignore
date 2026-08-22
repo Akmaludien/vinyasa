@@ -43,3 +43,6 @@ next-env.d.ts
 # misc tooling
 *.log
 *.pid
+
+# Claude Code local machine settings
+.claude/settings.local.json

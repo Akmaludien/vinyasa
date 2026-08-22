@@ -3,7 +3,7 @@ import type { NexoraProjectContext } from "./project-context";
 /**
  * Normalized product structure derived from a Nexora project. Nexora's product
  * intelligence (requirements, features, user flows, architecture) is turned
- * into the product surface that Vinyasa's design adaptation must map onto —
+ * into the product surface that Vinyasa's design adaptation must map onto -
  * NOT the reference website's structure.
  */
 export interface ProductStructure {

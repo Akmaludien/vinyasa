@@ -56,7 +56,7 @@ function writeSessions(list: ScanSession[]) {
     }
     storage.setItem(STORAGE_KEY, JSON.stringify(list));
   } catch {
-    // quota exceeded — drop oldest
+    // quota exceeded - drop oldest
     try {
       const pruned = list.slice(list.length - 5);
       storage.setItem(STORAGE_KEY, JSON.stringify(pruned));

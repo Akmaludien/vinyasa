@@ -2,7 +2,7 @@ import type { NexoraDesignContext } from "./nexora";
 
 /**
  * Structural validation for the `nexora.design-context` payload that Vinyasa
- * sends to — and reads back from — Nexora. Mirrors Nexora's own canonical
+ * sends to - and reads back from - Nexora. Mirrors Nexora's own canonical
  * guard so both sides agree on what a valid design context looks like.
  */
 export function isCanonicalDesignContext(value: unknown): value is NexoraDesignContext {

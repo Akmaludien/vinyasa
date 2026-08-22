@@ -82,7 +82,7 @@ export function computeAccessibility(m: DesignModel): A11yReport {
         issues.push({
           severity: "critical",
           kind: "contrast",
-          message: `Kontras rendah (${ratio.toFixed(2)}:1) — teks vs ${bg.hex}.`,
+          message: `Kontras rendah (${ratio.toFixed(2)}:1) pada teks vs ${bg.hex}.`,
           evidence: [`text=${toTokenHex(textColor)} bg=${bg.hex}`, `kebutuhan AA ${aa}:1`],
           recommendation: "Perkuat kontras teks terhadap latar ini di atas 4.5:1 (AA).",
         });
@@ -116,7 +116,7 @@ export function computeAccessibility(m: DesignModel): A11yReport {
     issues.push({
       severity: "suggestion",
       kind: "color-dependency",
-      message: `Warna ${c.hex} dipakai untuk elemen menonjol — pastikan tidak satu-satunya sinyal.`,
+      message: `Warna ${c.hex} dipakai untuk elemen menonjol. Pastikan tidak satu-satunya sinyal.`,
       evidence: [`usage ${c.usage}%`, ...c.selectors.slice(0, 2)],
       recommendation: "Gunakan tekstur/ikon sebagai sinyal tambahan selain warna.",
     });
@@ -126,7 +126,7 @@ export function computeAccessibility(m: DesignModel): A11yReport {
     wcagAA: { critical: aaCritical, warning: aaWarning, pass: aaPass },
     wcagAAA: { critical: aaaCritical, warning: aaaWarning, pass: aaaPass },
     issues,
-    note: "Analisis otomatis berbasis token warna yang terdeteksi. Bukan sertifikasi WCAG resmi — verifikasi manual tetap diperlukan.",
+    note: "Analisis otomatis berbasis token warna yang terdeteksi. Bukan sertifikasi WCAG resmi. Verifikasi manual tetap diperlukan.",
   };
 }
 

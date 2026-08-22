@@ -104,7 +104,7 @@ async function request({ path, method = "GET", body, cfg }: ClientRequest): Prom
 /**
  * Typed, resilient, server-only Nexora integration client. Handles timeout,
  * unavailable Nexora, invalid project ids, malformed responses, auth failures,
- * and schema validation — and never lets an integration error crash Vinyasa.
+ * and schema validation - and never lets an integration error crash Vinyasa.
  */
 export const nexoraClient = {
   async getProject(projectKey: string): Promise<NexoraProject> {

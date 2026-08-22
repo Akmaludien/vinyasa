@@ -76,7 +76,7 @@ export function buildPreviewHtml(r: DesignModel): string {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pratinjau Token — ${esc(r.source.title)}</title>
+<title>Pratinjau Token: ${esc(r.source.title)}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: ${esc(bestFamily)}; background: ${bodyBg}; color: ${fg}; padding: 40px 24px; }

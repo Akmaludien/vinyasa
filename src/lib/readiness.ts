@@ -18,7 +18,7 @@ export interface ReadinessResult {
 
 /**
  * Measures how structurally complete Vinyasa's design output is for downstream
- * implementation. This is NOT Build-Pack readiness — it reflects whether the
+ * implementation. This is NOT Build-Pack readiness - it reflects whether the
  * deterministic design layer is structured enough to build upon.
  */
 export function computeReadiness(model: DesignModel): ReadinessResult {

@@ -125,7 +125,7 @@ export function computeHealth(m: DesignModel): HealthReport {
     ? [{
         severity: "info" as const,
         category: "component",
-        message: "Tidak ada pola komponen yang terdeteksi — cek apakah situs memakai class naming yang dikenali.",
+        message: "Tidak ada pola komponen yang terdeteksi. Cek apakah situs memakai class naming yang dikenali.",
         evidence: [],
         recommendation: "Jalankan Deep Scan untuk analisis komponen yang lebih baik.",
       }]
@@ -193,7 +193,7 @@ export function computeHealth(m: DesignModel): HealthReport {
       "Components",
       componentConsistency,
       { dominant: [], outliers: [] },
-      "Konsistensi komponen — dihitung dari pola berulang (mode Deep Scan).",
+      "Konsistensi komponen, dihitung dari pola berulang (mode Deep Scan).",
       componentIssues,
     ),
     overall,

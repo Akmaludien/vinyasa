@@ -82,7 +82,7 @@ export function computeResponsive(m: DesignModel): ResponsiveReport {
     issues.push({
       severity: "warning",
       kind: "font-size",
-      message: `Ukuran font minimum ${minFontSize}px — terlalu kecil untuk dibaca di mobile.`,
+      message: `Ukuran font minimum ${minFontSize}px, terlalu kecil untuk dibaca di mobile.`,
       evidence: [`font-size min=${minFontSize}px`],
       recommendation: "Hindari ukuran font di bawah 14px untuk teks konten.",
     });
@@ -92,7 +92,7 @@ export function computeResponsive(m: DesignModel): ResponsiveReport {
     issues.push({
       severity: "info",
       kind: "font-size",
-      message: `Font hero besar terdeteksi (${maxFontSize}px) — pastikan diskalakan di viewport kecil.`,
+      message: `Font hero besar terdeteksi (${maxFontSize}px). Pastikan diskalakan di viewport kecil.`,
       evidence: [`font-size max=${maxFontSize}px`],
       recommendation: "Gunakan clamp() atau media query untuk skala heading responsif.",
     });

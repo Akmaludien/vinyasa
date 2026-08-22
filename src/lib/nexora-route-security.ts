@@ -8,14 +8,14 @@ import { getNexoraConfig } from "./nexora-config";
  *
  * Two independent gates, both required:
  *
- * 1. Caller authentication — the caller must present the Vinyasa proxy access
+ * 1. Caller authentication - the caller must present the Vinyasa proxy access
  *    key (`x-vinyasa-proxy-key`) which is compared, in constant time, against
  *    `VINYASA_PROXY_KEY` in the server env. Vinyasa has no user/identity
  *    system, so this shared secret *is* the session credential: the operator
- *    enters it in the Nexora panel and it is held in component state only —
+ *    enters it in the Nexora panel and it is held in component state only -
  *    never persisted, never bundled, never logged. Fails closed: when
  *    `VINYASA_PROXY_KEY` is unset every proxy call is denied.
- * 2. CSRF / origin — cross-site requests are rejected, and any request that
+ * 2. CSRF / origin - cross-site requests are rejected, and any request that
  *    carries an `Origin` must match the app's own origin.
  *
  * The Nexora integration token (`NEXORA_INTEGRATION_TOKEN`) is never involved

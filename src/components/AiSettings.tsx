@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   type AiConfig,
   type AiProviderId,
@@ -28,7 +29,29 @@ export function AiSettingsButton({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
   const builtin = PROVIDERS.find((p) => p.id === provider);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    // Stop the page behind the dialog from scrolling with it.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+    const trigger = triggerRef.current;
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+      // Send focus back to the chip that opened this, not to <body>.
+      trigger?.focus();
+    };
+  }, [open]);
 
   function openModal() {
     const startProvider = config?.provider ?? "openai";
@@ -74,150 +97,209 @@ export function AiSettingsButton({
     setOpen(false);
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={openModal}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
-          config
-            ? "border-emerald-700 bg-emerald-950/40 text-emerald-300"
-            : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
-        }`}
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${config ? "bg-emerald-400" : "bg-zinc-600"}`} />
-        {config ? "AI aktif" : "Atur AI"}
-      </button>
-    );
-  }
-
   const allProviders: Array<{ id: AiProviderId; label: string }> = [
     ...PROVIDERS.map((p) => ({ id: p.id, label: p.label })),
     { id: "custom", label: "Custom" },
   ];
 
+  // Portalled to <body> on purpose. The trigger lives inside the app bar, and
+  // that header carries backdrop-blur; a backdrop-filter makes an element the
+  // containing block for its position:fixed descendants, so an inline dialog
+  // would resolve "fixed inset-0" against the 56px header instead of the
+  // viewport, leaving it clipped and its backdrop unclickable.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setOpen(false)}>
-      <div
-        className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      <button
+        ref={triggerRef}
+        onClick={openModal}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={config ? "AI aktif, buka pengaturan AI" : "Atur AI"}
+        className={`chip ${
+          config ? "border-success-border bg-success-bg text-success" : ""
+        }`}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold">Pengaturan AI</h3>
-          <button onClick={() => setOpen(false)} className="text-zinc-500 hover:text-zinc-200">
-            ✕
-          </button>
-        </div>
-
-        <label className="mb-1 block text-xs text-zinc-400">Provider</label>
-        <div className="mb-3 grid grid-cols-4 gap-2">
-          {allProviders.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                setProvider(p.id);
-                const info = PROVIDERS.find((x) => x.id === p.id);
-                setModel(info?.models[0] ?? "");
-              }}
-              className={`rounded-lg border px-2 py-2 text-xs transition-colors ${
-                provider === p.id
-                  ? "border-zinc-400 bg-zinc-700 text-white"
-                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        {provider === "custom" && (
-          <>
-            <label className="mb-1 block text-xs text-zinc-400">Nama provider</label>
-            <input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="My Custom AI"
-              className="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
-            />
-            <label className="mb-1 block text-xs text-zinc-400">Base URL (OpenAI-compatible)</label>
-            <input
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="https://api.example.com/v1"
-              className="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
-            />
-          </>
-        )}
-
-        <label className="mb-1 block text-xs text-zinc-400">Model</label>
-        {builtin ? (
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-          >
-            {builtin.models.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder="model-name"
-            className="mb-3 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
-          />
-        )}
-
-        <label className="mb-1 block text-xs text-zinc-400">API key</label>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={builtin?.placeholder ?? "sk-... / api-key"}
-          className="mb-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none placeholder:text-zinc-600 focus:border-zinc-500"
+        <span
+          className={`h-1.5 w-1.5 shrink-0 rounded-full ${config ? "bg-success" : "bg-border-strong"}`}
+          aria-hidden="true"
         />
-        <p className="mb-3 text-[11px] leading-4 text-zinc-500">
-          Key hanya disimpan di localStorage browser Anda dan dikirim langsung ke{" "}
-          <span className="text-zinc-300">
-            {provider === "custom" ? (label.trim() || "endpoint custom Anda") : endpointName({ provider, model, apiKey })}
-          </span>{" "}
-          saat menekan tombol AI — tidak pernah menyentuh server kami.
-        </p>
+        <span className="hidden sm:inline">{config ? "AI aktif" : "Atur AI"}</span>
+      </button>
 
-        <label className="mb-4 flex items-center gap-2 text-xs text-zinc-400">
-          <input
-            type="checkbox"
-            checked={autoSwitch}
-            onChange={(e) => setAutoSwitch(e.target.checked)}
-            className="accent-zinc-200"
-          />
-          Auto-switch model saat rate limit (429)
-        </label>
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#0d1210]/55 p-4 backdrop-blur-sm sm:items-center"
+            onClick={() => setOpen(false)}
+          >
+            {/* Column layout with its own scroll area: the form is taller than a short
+                viewport, and a plain block would run off the bottom of the screen. */}
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ai-settings-title"
+              tabIndex={-1}
+              onClick={(e) => e.stopPropagation()}
+              className="animate-fade-up my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border-strong bg-surface shadow-pop"
+            >
+              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+                <h3 id="ai-settings-title" className="text-md font-semibold text-fg">
+                  Pengaturan AI
+                </h3>
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Tutup pengaturan AI"
+                  className="btn btn-ghost btn-sm px-2"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </header>
 
-        {status && (
-          <p className={`mb-3 text-xs ${status.type === "ok" ? "text-emerald-400" : "text-red-400"}`}>
-            {status.msg}
-          </p>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                <div className="label mb-1.5">Provider</div>
+                <div className="mb-4 grid grid-cols-4 gap-1.5">
+                  {allProviders.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setProvider(p.id);
+                        const info = PROVIDERS.find((x) => x.id === p.id);
+                        setModel(info?.models[0] ?? "");
+                      }}
+                      aria-pressed={provider === p.id}
+                      className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                        provider === p.id
+                          ? "border-fg bg-fg text-canvas"
+                          : "border-border text-muted hover:border-border-strong hover:text-fg"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {provider === "custom" && (
+                  <>
+                    <label htmlFor="ai-label" className="label mb-1.5">
+                      Nama provider
+                    </label>
+                    <input
+                      id="ai-label"
+                      value={label}
+                      onChange={(e) => setLabel(e.target.value)}
+                      placeholder="My Custom AI"
+                      className="field mb-4"
+                    />
+                    <label htmlFor="ai-base-url" className="label mb-1.5">
+                      Base URL (OpenAI-compatible)
+                    </label>
+                    <input
+                      id="ai-base-url"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      placeholder="https://api.example.com/v1"
+                      className="field mb-4"
+                    />
+                  </>
+                )}
+
+                <label htmlFor="ai-model" className="label mb-1.5">
+                  Model
+                </label>
+                {builtin ? (
+                  <select
+                    id="ai-model"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    className="field mb-4"
+                  >
+                    {builtin.models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id="ai-model"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    placeholder="model-name"
+                    className="field mb-4"
+                  />
+                )}
+
+                <label htmlFor="ai-key" className="label mb-1.5">
+                  API key
+                </label>
+                <input
+                  id="ai-key"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={builtin?.placeholder ?? "sk-... / api-key"}
+                  className="field mb-2"
+                />
+                <p className="mb-4 text-xs text-faint">
+                  Key hanya disimpan di localStorage browser Anda dan dikirim langsung ke{" "}
+                  <span className="text-fg">
+                    {provider === "custom"
+                      ? label.trim() || "endpoint custom Anda"
+                      : endpointName({ provider, model, apiKey })}
+                  </span>{" "}
+                  saat menekan tombol AI, tidak pernah menyentuh server kami.
+                </p>
+
+                <label className="flex items-center gap-2 text-sm text-muted">
+                  <input
+                    type="checkbox"
+                    checked={autoSwitch}
+                    onChange={(e) => setAutoSwitch(e.target.checked)}
+                    className="accent-brand-500"
+                  />
+                  Auto-switch model saat rate limit (429)
+                </label>
+
+                {status && (
+                  <p
+                    role="status"
+                    className={`mt-3 text-sm ${status.type === "ok" ? "text-success" : "text-danger"}`}
+                  >
+                    {status.msg}
+                  </p>
+                )}
+              </div>
+
+              <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-5 py-3.5">
+                <button onClick={handleClear} className="btn btn-ghost">
+                  Hapus key
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={
+                    busy || !apiKey.trim() || !model || (provider === "custom" && !baseUrl.trim())
+                  }
+                  className="btn btn-primary"
+                >
+                  {busy ? "Menguji..." : "Uji & Simpan"}
+                </button>
+              </footer>
+            </div>
+          </div>,
+          document.body,
         )}
-
-        <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={handleClear}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:border-zinc-500"
-          >
-            Hapus key
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={busy || !apiKey.trim() || !model || (provider === "custom" && !baseUrl.trim())}
-            className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-900 hover:bg-white disabled:opacity-50"
-          >
-            {busy ? "Menguji…" : "Uji & Simpan"}
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

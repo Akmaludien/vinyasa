@@ -295,11 +295,11 @@ export default function HomePage() {
             aria-label="Vinyasa, kembali ke scan"
           >
             <Image
-              src="/logo.jpeg"
+              src="/logo.png"
               alt=""
-              width={26}
+              width={40}
               height={26}
-              className="rounded-sm object-contain"
+              className="object-contain"
               priority
             />
             <span className="text-md font-bold tracking-tight text-fg">Vinyasa</span>

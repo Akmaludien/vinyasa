@@ -13,14 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * No `icons` block on purpose. app/favicon.ico, app/icon.png and
+ * app/apple-icon.png are file conventions: Next emits the <link> tags with the
+ * right type and sizes, and fingerprints the URLs so a logo change is never
+ * served from a stale cache.
+ */
 export const metadata: Metadata = {
   title: "Vinyasa · Design Intelligence Platform",
   description:
     "Ubah website apa pun menjadi design system yang cerdas, dapat digunakan kembali: token, komponen, health, aksesibilitas, responsif, dan AI.",
-  icons: {
-    icon: "/logo.jpeg",
-    apple: "/logo.jpeg",
-  },
 };
 
 /**

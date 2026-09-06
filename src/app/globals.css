@@ -117,7 +117,6 @@
   --grid-major-size: 128px;
   --grid-line: #e6ebe8;
   --grid-major: #d8e0dc;
-  --wave-divider: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6' fill='none'><path d='M0 3q3-2.6 6 0t6 0' stroke='%23c6cfcb' stroke-width='1.1' stroke-linecap='round'/></svg>");
   --select-chevron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6663' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
 }
 
@@ -166,7 +165,6 @@
   /* Dark inverts the relationship: lines sit just above the canvas, not below. */
   --grid-line: #161f1b;
   --grid-major: #1e2925;
-  --wave-divider: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6' fill='none'><path d='M0 3q3-2.6 6 0t6 0' stroke='%23394642' stroke-width='1.1' stroke-linecap='round'/></svg>");
   --select-chevron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b9591' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
 }
 
@@ -426,33 +424,15 @@
       color-mix(in oklab, var(--color-brand-500) 18%, transparent);
   }
 
-  /* Card 3 carries five tags and card 1 only two, so anchoring the label
-     block to the bottom of the card could never line the dividers up: the
-     block that wraps to two rows always reaches higher. Subgrid fixes it from
-     the other end. The three cards share one set of row bands, title, sentence
-     and label block, each band sized to the tallest card, so every card starts
-     its label block on the same line and simply runs shorter below it. Falls
-     back to plain block flow where subgrid is unsupported. */
-  @media (width >= 40rem) {
-    .flow-grid {
-      grid-template-rows: auto auto auto;
-    }
-    .flow-grid > .flow-card {
-      display: grid;
-      grid-row: span 3;
-      grid-template-rows: subgrid;
-    }
-  }
-
-  /* A hairline would read as another card edge; the wave marks a change of
-     content instead. Tiles a 12px SVG horizontally, so it stays crisp at any
-     width and follows the theme through --wave-divider. */
-  .divider-wave {
-    height: 6px;
-    background-image: var(--wave-divider);
-    background-repeat: repeat-x;
-    background-position: left center;
-    background-size: 12px 6px;
+  /* Ambient glow behind the scan console. Sits under an opaque card, so only
+     the spill around the edges is ever seen; that is the whole point. Alpha is
+     low enough that no text above it moves off its contrast ratio. */
+  .decor-aura {
+    background: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--color-brand-500) 16%, transparent),
+      transparent
+    );
   }
 
   /* Native select chrome reads as browser default next to the rest of the

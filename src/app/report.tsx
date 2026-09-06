@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { ExtractResponse, DesignModel, ColorToken } from "@/lib/model";
 import { buildDesignMd, buildDownloadFilename, type MdOptions, type MdLang } from "@/lib/design-md";
+import { DesignMdFeature } from "@/components/DesignMdFeature";
 import { buildPreviewHtml } from "@/lib/preview";
 import { buildExports, buildZip } from "@/lib/export";
 import { streamAiWithAutoSwitch, loadConfig, buildModelContext } from "@/lib/ai";
@@ -489,15 +490,13 @@ function AuditPanel({ result }: { result: DesignModel }) {
 
 const MD_SECTION_LABELS: Array<{ key: keyof NonNullable<MdOptions["sections"]>; label: string }> = [
   { key: "colors", label: "Warna" },
-  { key: "typography", label: "Tipografi" },
-  { key: "textStyles", label: "Gaya teks" },
-  { key: "radius", label: "Radius" },
-  { key: "spacing", label: "Spacing" },
-  { key: "shadows", label: "Shadows" },
-  { key: "audit", label: "Audit CSS" },
-  { key: "health", label: "Health" },
-  { key: "accessibility", label: "A11y" },
-  { key: "responsive", label: "Responsif" },
+  { key: "typography", label: "Skala teks" },
+  { key: "spacing", label: "Skala jarak" },
+  { key: "shape", label: "Bentuk" },
+  { key: "layout", label: "Layout" },
+  { key: "components", label: "Komponen" },
+  { key: "contrast", label: "Kontras" },
+  { key: "snippets", label: "Token siap tempel" },
 ];
 
 function MdControls({
@@ -2380,6 +2379,21 @@ export function FullReport({
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("overview");
   const [activeIndex, setActiveIndex] = useState(0);
+  /* Closed by default: DESIGN.md is what most people came for, and the twenty
+     two panels below are for whoever wants to go deeper. */
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailRef = useRef<HTMLDivElement | null>(null);
+
+  /* Reached from the DESIGN.md header. Without opening the collapse first the
+     button would set a tab nobody can see and read as broken. The scroll waits
+     a frame so it measures the panel after it has mounted. */
+  function openFullMd() {
+    setTab("md");
+    setDetailsOpen(true);
+    requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   const [aiConfig, setAiConfig] = useState<AiConfig | null>(() =>
     initialAiConfig !== undefined ? initialAiConfig : loadConfig(),
   );
@@ -2488,155 +2502,201 @@ export function FullReport({
 
   return (
     <section className="flex flex-col gap-4">
-      {/* ------------------------------------------------- report identity */}
-      <div className="card p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <h2 className="truncate text-2xl font-bold tracking-tight text-fg">
-              {result.source.title}
-            </h2>
-            <a
-              href={result.source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-0.5 inline-block max-w-full truncate font-mono text-xs text-faint underline-offset-2 transition-colors hover:text-brand-500 hover:underline"
+      {/* Only surfaces when several URLs were scanned at once. It has to stay
+          outside the collapse: it re-targets DESIGN.md above it, so burying it
+          in the details would make the headline artifact unswitchable. */}
+      {results.length > 1 && (
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          role="group"
+          aria-label="Pilih hasil scan"
+        >
+          <span className="eyebrow mr-1">Hasil</span>
+          {results.map((r, i) => (
+            <button
+              key={r.source.url}
+              onClick={() => setActiveIndex(i)}
+              aria-pressed={i === activeIndex}
+              className="chip"
             >
-              {result.source.url}
-            </a>
-          </div>
-          {results.length > 1 && (
-            <div
-              className="flex shrink-0 flex-wrap gap-1"
-              role="group"
-              aria-label="Pilih hasil scan"
-            >
-              {results.map((r, i) => (
-                <button
-                  key={r.source.url}
-                  onClick={() => setActiveIndex(i)}
-                  aria-pressed={i === activeIndex}
-                  className="chip"
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {scoreCells.map(([label, value]) => (
-            <div key={label} className="card-quiet p-3">
-              <div className="text-xs text-faint">{label}</div>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-xl font-extrabold tabular-nums text-fg">{value}</span>
-                <ScoreBar value={value} />
-              </div>
-            </div>
+              {i + 1}
+            </button>
           ))}
         </div>
+      )}
+
+      {/* --------------------------------------------- headline artifact */}
+      <DesignMdFeature result={result} onOpenFull={openFullMd} />
+
+      {/* ------------------------------------------------ technical detail */}
+      <div ref={detailRef} className="scroll-mt-20">
+        <button
+          onClick={() => setDetailsOpen((v) => !v)}
+          aria-expanded={detailsOpen}
+          aria-controls="report-detail"
+          className="card flex w-full items-center gap-3 p-4 text-left transition-colors hover:border-border-strong"
+        >
+          <span className="min-w-0">
+            <span className="block text-base font-semibold text-fg">
+              {detailsOpen ? t("detail.hide") : t("detail.show")}
+            </span>
+            <span className="mt-0.5 block text-sm text-muted">{t("detail.sub")}</span>
+          </span>
+          {/* Rotates rather than swapping glyphs, so the control never reflows. */}
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className={`ml-auto h-4 w-4 shrink-0 text-faint transition-transform duration-200 ${
+              detailsOpen ? "rotate-180" : ""
+            }`}
+          >
+            <path
+              d="m6 9 6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
 
-      {/* ------------------------------------------- navigation + panel */}
-      <div className="grid gap-4 lg:grid-cols-[188px_minmax(0,1fr)] lg:items-start">
-        {/* Under lg the 22 sections collapse into a grouped picker. */}
-        <div className="lg:hidden">
-          <label htmlFor="report-section" className="label mb-1.5">
-            Bagian laporan
-          </label>
-          <select
-            id="report-section"
-            value={tab}
-            onChange={(e) => setTab(e.target.value as Tab)}
-            className="field"
-          >
-            {tabGroups.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
+      {!detailsOpen ? null : (
+        <div id="report-detail" className="animate-fade flex flex-col gap-4">
+        {/* ------------------------------------------------- report identity */}
+        <div className="card p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="truncate text-2xl font-bold tracking-tight text-fg">
+                {result.source.title}
+              </h2>
+              <a
+                href={result.source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-0.5 inline-block max-w-full truncate font-mono text-xs text-faint underline-offset-2 transition-colors hover:text-brand-500 hover:underline"
+              >
+                {result.source.url}
+              </a>
+            </div>
+          </div>
 
-        <nav
-          aria-label="Bagian laporan"
-          className="hidden lg:sticky lg:top-[72px] lg:block lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1"
-        >
-          <div className="flex flex-col gap-4">
-            {tabGroups.map((g) => (
-              <div key={g.label}>
-                <div className="eyebrow mb-1.5 px-2">{g.label}</div>
-                <ul className="flex flex-col gap-0.5">
-                  {g.items.map((item) => {
-                    const active = tab === item.id;
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => setTab(item.id)}
-                          aria-current={active ? "page" : undefined}
-                          className={`w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                            active
-                              ? "bg-brand-500 font-semibold text-on-brand"
-                              : "text-muted hover:bg-surface-2 hover:text-fg"
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {scoreCells.map(([label, value]) => (
+              <div key={label} className="card-quiet p-3">
+                <div className="text-xs text-faint">{label}</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-xl font-extrabold tabular-nums text-fg">{value}</span>
+                  <ScoreBar value={value} />
+                </div>
               </div>
             ))}
           </div>
-        </nav>
+        </div>
 
-        <div className="card min-w-0 p-5">
-          <h3 className="sr-only">{activeTabLabel}</h3>
-          <div key={tab} className="animate-fade">
-        {tab === "overview" && (
-          <OverviewPanel result={result} onVoice={() => setTab("components")} />
-        )}
-        {tab === "pages" && <PagesPanel result={result} />}
-        {tab === "colors" && <ColorsPanel result={result} />}
-        {tab === "typography" && <TypographyPanel result={result} />}
-        {tab === "spacing" && <SpacingPanel result={result} />}
-        {tab === "shapes" && <ShapesPanel result={result} />}
-        {tab === "effects" && <EffectsPanel result={result} />}
-        {tab === "components" && <ComponentsPanel result={result} />}
-        {tab === "responsive" && <ResponsivePanel result={result} />}
-        {tab === "darkmode" && <DarkModePanel result={result} />}
-        {tab === "playground" && (
-          <PlaygroundPanel key={prefillKey} result={result} prefill={aiPrefill} />
-        )}
-        {tab === "diff" && <DiffPanel result={result} />}
-        {tab === "history" && <HistoryPanel current={result} onLoad={setLoaded} />}
-        {tab === "drift" && <DriftPanel current={result} onLoad={setLoaded} />}
-        {tab === "health" && <HealthPanel result={result} />}
-        {tab === "accessibility" && <A11yPanel result={result} />}
-        {tab === "export" && <ExportPanel result={result} />}
-        {tab === "audit" && <AuditPanel result={result} />}
-        {tab === "md" && <MdPanel result={result} />}
-        {tab === "preview" && <PreviewPanel result={result} />}
-        {tab === "project" && <ProjectPanel result={result} />}
-        {tab === "spec" && <SpecPanel result={result} />}
-        {tab === "nexora" && <NexoraPanel result={result} />}
-        {tab === "ai" && (
-          <AiPanel
-            result={result}
-            config={aiConfig}
-            onChange={syncAiConfig}
-            onRecommend={handleRecommend}
-            onGoToPlayground={() => setTab("playground")}
-          />
-        )}
+        {/* ------------------------------------------- navigation + panel */}
+        <div className="grid gap-4 lg:grid-cols-[188px_minmax(0,1fr)] lg:items-start">
+          {/* Under lg the 22 sections collapse into a grouped picker. */}
+          <div className="lg:hidden">
+            <label htmlFor="report-section" className="label mb-1.5">
+              Bagian laporan
+            </label>
+            <select
+              id="report-section"
+              value={tab}
+              onChange={(e) => setTab(e.target.value as Tab)}
+              className="field"
+            >
+              {tabGroups.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+
+          <nav
+            aria-label="Bagian laporan"
+            className="hidden lg:sticky lg:top-[72px] lg:block lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1"
+          >
+            <div className="flex flex-col gap-4">
+              {tabGroups.map((g) => (
+                <div key={g.label}>
+                  <div className="eyebrow mb-1.5 px-2">{g.label}</div>
+                  <ul className="flex flex-col gap-0.5">
+                    {g.items.map((item) => {
+                      const active = tab === item.id;
+                      return (
+                        <li key={item.id}>
+                          <button
+                            onClick={() => setTab(item.id)}
+                            aria-current={active ? "page" : undefined}
+                            className={`w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                              active
+                                ? "bg-brand-500 font-semibold text-on-brand"
+                                : "text-muted hover:bg-surface-2 hover:text-fg"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </nav>
+
+          <div className="card min-w-0 p-5">
+            <h3 className="sr-only">{activeTabLabel}</h3>
+            <div key={tab} className="animate-fade">
+          {tab === "overview" && (
+            <OverviewPanel result={result} onVoice={() => setTab("components")} />
+          )}
+          {tab === "pages" && <PagesPanel result={result} />}
+          {tab === "colors" && <ColorsPanel result={result} />}
+          {tab === "typography" && <TypographyPanel result={result} />}
+          {tab === "spacing" && <SpacingPanel result={result} />}
+          {tab === "shapes" && <ShapesPanel result={result} />}
+          {tab === "effects" && <EffectsPanel result={result} />}
+          {tab === "components" && <ComponentsPanel result={result} />}
+          {tab === "responsive" && <ResponsivePanel result={result} />}
+          {tab === "darkmode" && <DarkModePanel result={result} />}
+          {tab === "playground" && (
+            <PlaygroundPanel key={prefillKey} result={result} prefill={aiPrefill} />
+          )}
+          {tab === "diff" && <DiffPanel result={result} />}
+          {tab === "history" && <HistoryPanel current={result} onLoad={setLoaded} />}
+          {tab === "drift" && <DriftPanel current={result} onLoad={setLoaded} />}
+          {tab === "health" && <HealthPanel result={result} />}
+          {tab === "accessibility" && <A11yPanel result={result} />}
+          {tab === "export" && <ExportPanel result={result} />}
+          {tab === "audit" && <AuditPanel result={result} />}
+          {tab === "md" && <MdPanel result={result} />}
+          {tab === "preview" && <PreviewPanel result={result} />}
+          {tab === "project" && <ProjectPanel result={result} />}
+          {tab === "spec" && <SpecPanel result={result} />}
+          {tab === "nexora" && <NexoraPanel result={result} />}
+          {tab === "ai" && (
+            <AiPanel
+              result={result}
+              config={aiConfig}
+              onChange={syncAiConfig}
+              onRecommend={handleRecommend}
+              onGoToPlayground={() => setTab("playground")}
+            />
+          )}
+            </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </section>
   );
 }

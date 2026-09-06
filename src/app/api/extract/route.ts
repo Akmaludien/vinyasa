@@ -8,6 +8,26 @@ import { computeReadiness } from "@/lib/readiness";
 import { buildDesignPack } from "@/lib/pack";
 import { createProject, addDesignVersion, type ProjectRecord } from "@/lib/project";
 
+/**
+ * What a person types is not a URL.
+ *
+ * `stripe.com` is how everyone writes an address, and it fails `new URL()`, so
+ * it was dropped by the safety filter and reported back as "URL tidak boleh
+ * kosong" while the user stared at the domain they had just entered. Anything
+ * without a scheme gets https, which is also the right default for any site
+ * worth cloning.
+ */
+function normalizeUrl(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) return v;
+  /* A scheme we do not serve is left intact so the route rejects it by name
+     rather than turning it into a web address. Matching on `://` alone would
+     not catch these, and matching on any colon would break `example.com:8080`. */
+  if (/^(mailto|javascript|data|file|tel|blob):/i.test(v)) return v;
+  return `https://${v.replace(/^\/+/, "")}`;
+}
+
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
@@ -22,7 +42,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const rawUrls = (body.urls ?? (body.url ? [body.url] : [])).map((u: string) => String(u).trim()).filter(Boolean);
+  const rawUrls = (body.urls ?? (body.url ? [body.url] : []))
+    .map((u: string) => normalizeUrl(String(u)))
+    .filter(Boolean);
   const scope = parseScanScope(body.scope, rawUrls, 1);
   let urls = scope.urls.slice(0, scope.maxUrls ?? 5);
 
@@ -32,8 +54,16 @@ export async function POST(req: NextRequest) {
   }
 
   if (urls.length === 0) {
+    /* Two different failures used to share one message. An empty box is the
+       caller's mistake; an address that survived normalisation and was still
+       rejected is a bad address, and saying "URL tidak boleh kosong" while the
+       user looks at what they typed reads as a bug. */
+    const message =
+      rawUrls.length === 0
+        ? "Masukkan alamat website yang ingin dipindai"
+        : "Alamat website tidak bisa dipindai. Periksa ejaannya, dan pastikan bukan alamat lokal.";
     return NextResponse.json(
-      { ok: false, results: [], errors: [{ url: "", message: "URL tidak boleh kosong" }] },
+      { ok: false, results: [], errors: [{ url: rawUrls[0] ?? "", message }] },
       { status: 400 },
     );
   }

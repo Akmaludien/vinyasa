@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
  * served from a stale cache.
  */
 export const metadata: Metadata = {
-  title: "Vinyasa · Design Intelligence Platform",
+  title: "Vinyasa · Bangun DESIGN.md dari situs mana pun",
   description:
     "Ubah website apa pun menjadi design system yang cerdas, dapat digunakan kembali: token, komponen, health, aksesibilitas, responsif, dan AI.",
 };

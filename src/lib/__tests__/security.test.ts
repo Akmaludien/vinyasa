@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isSafeUrl, isPrivateHost } from "@/lib/fetcher";
-import { parseScanScope, shouldExcludeUrl, prioritizePaths } from "@/lib/scan";
+import { parseScanScope, shouldExcludeUrl, prioritizePaths, parseSitemapXml } from "@/lib/scan";
 
 describe("SSRF protection", () => {
   it("blocks http", () => {
@@ -49,6 +49,45 @@ describe("URL exclusions", () => {
     expect(shouldExcludeUrl("https://a.com/pricing")).toBe(false);
     expect(shouldExcludeUrl("https://a.com/img.svg")).toBe(true);
     expect(shouldExcludeUrl("https://a.com/features")).toBe(false);
+  });
+
+  it("matches an extension at the end of the path, not anywhere in the URL", () => {
+    /* Substring matching threw away articles whose slug merely named a format,
+       which on a design blog is a lot of them. */
+    expect(shouldExcludeUrl("https://a.com/blog/perbandingan-png-dan-svg")).toBe(false);
+    expect(shouldExcludeUrl("https://a.com/guides/pdf-export")).toBe(false);
+
+    /* A query string is not part of the filename. */
+    expect(shouldExcludeUrl("https://a.com/logo.png?v=2")).toBe(true);
+    expect(shouldExcludeUrl("https://a.com/sitemap.xml")).toBe(true);
+  });
+});
+
+describe("parseSitemapXml", () => {
+  it("tells a sitemap index apart from a list of pages", () => {
+    /* Both shapes use <loc>. Reading an index as a page list is what queued
+       Supabase's child sitemaps as if they were pages to scan. */
+    const index = parseSitemapXml(
+      `<?xml version="1.0"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+         <sitemap><loc>https://a.com/sitemap_www.xml</loc></sitemap>
+         <sitemap><loc>https://a.com/docs/sitemap.xml</loc></sitemap>
+       </sitemapindex>`,
+    );
+    expect(index.kind).toBe("index");
+    expect(index.locs).toEqual(["https://a.com/sitemap_www.xml", "https://a.com/docs/sitemap.xml"]);
+
+    const pages = parseSitemapXml(
+      `<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+         <url><loc>https://a.com/pricing</loc></url>
+       </urlset>`,
+    );
+    expect(pages.kind).toBe("urlset");
+    expect(pages.locs).toEqual(["https://a.com/pricing"]);
+  });
+
+  it("returns nothing for a document that is not a sitemap", () => {
+    expect(parseSitemapXml("<html><body>404</body></html>").locs).toEqual([]);
+    expect(parseSitemapXml("").locs).toEqual([]);
   });
 });
 

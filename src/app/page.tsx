@@ -13,12 +13,21 @@ import type { AiConfig } from "@/lib/ai";
 import { loadConfig, saveConfig } from "@/lib/ai";
 import { FEATURES } from "@/lib/flags";
 
+/**
+ * Sites worth cloning that are also cheap to scan.
+ *
+ * All five serve static HTML and CSS, so a suggestion click rarely ends in a
+ * failed scan the way a large consumer site would. Their icons live in
+ * `public/suggestions/` rather than coming from a favicon service, so opening
+ * the landing page makes no third-party request and nothing depends on someone
+ * else's uptime to render.
+ */
 const SUGGESTIONS = [
-  "https://apple.com",
-  "https://stripe.com",
-  "https://linear.app",
-  "https://vercel.com",
-  "https://tailwindcss.com",
+  { domain: "supabase.com", icon: "/suggestions/supabase.png" },
+  { domain: "resend.com", icon: "/suggestions/resend.png" },
+  { domain: "raycast.com", icon: "/suggestions/raycast.png" },
+  { domain: "cal.com", icon: "/suggestions/cal.png" },
+  { domain: "posthog.com", icon: "/suggestions/posthog.png" },
 ];
 
 function scopeOptions(t: (k: DictKey) => string): Array<{ id: ScanScopeKind; label: string; hint: string }> {
@@ -178,6 +187,7 @@ export default function HomePage() {
   const [scope, setScope] = useState<ScanScopeKind>("smart");
   const [mode, setMode] = useState<ScanMode>("fast");
   const [maxPages, setMaxPages] = useState(25);
+  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<ScanStage>("idle");
   const [error, setError] = useState("");
@@ -189,6 +199,16 @@ export default function HomePage() {
   const scopeOpts = scopeOptions(t);
   const flow = flowSteps(t);
   const activeScope = scopeOpts.find((o) => o.id === scope);
+  /* Page count only means something for the two scopes that read it, so it
+     joins the summary only then; otherwise the line advertises a number the
+     scan will ignore. */
+  const scanSummary = [
+    activeScope?.label,
+    mode === "deep" ? "Deep" : "Fast",
+    scope === "custom" || scope === "all" ? `${maxPages} ${t("home.pagesUnit")}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const hasResults = Boolean(response && response.results.length > 0);
 
   useEffect(() => {
@@ -347,7 +367,7 @@ export default function HomePage() {
             <section className="animate-fade-up text-center">
               <p className="eyebrow mb-3 inline-flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-                Design Intelligence Platform
+                {t("hero.eyebrow")}
               </p>
               <h1 className="text-display text-fg">
                 {t("hero.lead")}
@@ -409,80 +429,128 @@ export default function HomePage() {
                     </p>
                   )}
 
-                  <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-faint">
-                    <span>{t("scan.try")}</span>
+                  {/* The row ends flush with the field above, and the chips are
+                      sized so that reaching the edge costs almost nothing.
+
+                      At the base chip size the five names only fill about four
+                      fifths of the column, so `grow` had to hand each pill some
+                      28px of slack and the leftover read as hollow padding. A
+                      taller pill with 13px text and a 16px mark takes up most of
+                      that width on its own, leaving a few pixels per chip to
+                      absorb. The utilities beat `.chip` because Tailwind's
+                      utilities layer sits above `@layer components`, so the
+                      scope chips inside the settings block keep the base size. */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-faint">
+                    <span className="shrink-0">{t("scan.try")}</span>
                     {SUGGESTIONS.map((s) => (
-                      <button key={s} onClick={() => setUrls(s)} className="chip">
-                        {s.replace("https://", "")}
+                      <button
+                        key={s.domain}
+                        onClick={() => setUrls(`https://${s.domain}`)}
+                        className="chip h-8 grow justify-center px-3 text-sm"
+                      >
+                        <Image
+                          src={s.icon}
+                          alt=""
+                          width={16}
+                          height={16}
+                          className="shrink-0 rounded-[3px]"
+                        />
+                        {s.domain}
                       </button>
                     ))}
                   </div>
 
                   <hr className="my-5 border-border" />
 
-                  {/* Fixed second column and reserved hint height: swapping
-                      Fast/Deep changes the hint text, and an `auto` track would
-                      resize and shove the toggle sideways on every click. */}
-                  <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_232px]">
-                    <div>
-                      <div className="label mb-2">{t("home.scopeLabel")}</div>
-                      <div
-                        className="flex flex-wrap gap-1.5"
-                        role="group"
-                        aria-label={t("home.scopeLabel")}
-                      >
-                        {scopeOpts.map((o) => (
-                          <button
-                            key={o.id}
-                            onClick={() => setScope(o.id)}
-                            aria-pressed={scope === o.id}
-                            className="chip"
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 min-h-9 text-xs text-faint">{activeScope?.hint}</p>
-                    </div>
+                  {/* The settings start collapsed. Nobody tunes a scan before
+                      seeing its first result, and giving five scope chips the
+                      same visual weight as the URL field made the card read as
+                      a form rather than as one action.
 
-                    <div>
-                      <div className="label mb-2">{t("home.modeLabel")}</div>
-                      <div
-                        className="inline-flex rounded-md border border-border p-0.5"
-                        role="group"
-                        aria-label={t("home.modeLabel")}
-                      >
-                        {(["fast", "deep"] as ScanMode[]).map((m) => (
-                          <button
-                            key={m}
-                            onClick={() => setMode(m)}
-                            aria-pressed={mode === m}
-                            className={`w-16 rounded-sm py-1 text-xs font-semibold transition-colors ${
-                              mode === m ? "bg-fg text-canvas" : "text-muted hover:text-fg"
-                            }`}
-                          >
-                            {m === "fast" ? "Fast" : "Deep"}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 min-h-9 text-xs text-faint">
-                        {mode === "deep" ? t("scan.modeDeep") : t("scan.modeFast")}
-                      </p>
-                    </div>
+                      The summary line is not decoration. Hiding the block costs
+                      the user sight of which mode is active, and Deep is the
+                      mode that produces the better document, so the line states
+                      it without requiring a click. */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-faint">{scanSummary}</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowSettings((v) => !v)}
+                      aria-expanded={showSettings}
+                      aria-controls="scan-settings"
+                      className="text-xs font-semibold text-brand-500 underline-offset-2 hover:underline"
+                    >
+                      {showSettings ? t("home.settingsHide") : t("home.settingsShow")}
+                    </button>
                   </div>
 
-                  {(scope === "custom" || scope === "all") && (
-                    <label className="animate-fade mt-1 flex items-center gap-2 text-xs text-muted">
-                      {t("home.maxPages")}
-                      <input
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={maxPages}
-                        onChange={(e) => setMaxPages(Number(e.target.value))}
-                        className="field w-20 py-1"
-                      />
-                    </label>
+                  {showSettings && (
+                    <div id="scan-settings" className="animate-fade mt-4">
+                      {/* Fixed second column and reserved hint height: swapping
+                          Fast/Deep changes the hint text, and an `auto` track would
+                          resize and shove the toggle sideways on every click. */}
+                      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_232px]">
+                        <div>
+                          <div className="label mb-2">{t("home.scopeLabel")}</div>
+                          <div
+                            className="flex flex-wrap gap-1.5"
+                            role="group"
+                            aria-label={t("home.scopeLabel")}
+                          >
+                            {scopeOpts.map((o) => (
+                              <button
+                                key={o.id}
+                                onClick={() => setScope(o.id)}
+                                aria-pressed={scope === o.id}
+                                className="chip"
+                              >
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="mt-2 min-h-9 text-xs text-faint">{activeScope?.hint}</p>
+                        </div>
+
+                        <div>
+                          <div className="label mb-2">{t("home.modeLabel")}</div>
+                          <div
+                            className="inline-flex rounded-md border border-border p-0.5"
+                            role="group"
+                            aria-label={t("home.modeLabel")}
+                          >
+                            {(["fast", "deep"] as ScanMode[]).map((m) => (
+                              <button
+                                key={m}
+                                onClick={() => setMode(m)}
+                                aria-pressed={mode === m}
+                                className={`w-16 rounded-sm py-1 text-xs font-semibold transition-colors ${
+                                  mode === m ? "bg-brand-500 text-on-brand" : "text-muted hover:text-fg"
+                                }`}
+                              >
+                                {m === "fast" ? "Fast" : "Deep"}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="mt-2 min-h-9 text-xs text-faint">
+                            {mode === "deep" ? t("scan.modeDeep") : t("scan.modeFast")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {(scope === "custom" || scope === "all") && (
+                        <label className="animate-fade mt-4 flex items-center gap-2 text-xs text-muted">
+                          {t("home.maxPages")}
+                          <input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={maxPages}
+                            onChange={(e) => setMaxPages(Number(e.target.value))}
+                            className="field w-20 py-1"
+                          />
+                        </label>
+                      )}
+                    </div>
                   )}
                 </section>
               )}

@@ -1,37 +1,19 @@
 import type { DesignModel } from "./model";
+import { assignRoles } from "./design-decisions";
+import { isUsableValue } from "./token-value";
+export { isUsableValue } from "./token-value";
 
 /**
  * The two paste-ready token blocks: plain custom properties, and a Tailwind v4
  * `@theme`.
  *
  * They live here rather than in export.ts because DESIGN.md embeds the same two
- * blocks, and export.ts already imports design-md.ts. Sharing them from a leaf
- * module keeps that one-way and lets both callers stay byte-identical: what a
+ * blocks. Sharing them keeps both callers byte-identical: what a
  * reader copies out of the document is exactly what lands in tokens.css.
  */
 
 function cssVarName(...parts: string[]): string {
   return `--${parts.join("-")}`;
-}
-
-/* Values that are legal CSS but useless to someone rebuilding: keywords that
-   defer to something else, and variables whose definition lives in a stylesheet
-   the reader does not have. A token file that declares `--font-family-2:
-   inherit` has declared nothing, so they are dropped from every emitter. */
-const OPAQUE_KEYWORDS = new Set([
-  "inherit",
-  "initial",
-  "unset",
-  "revert",
-  "none",
-  "auto",
-  "currentcolor",
-]);
-
-export function isUsableValue(raw: string): boolean {
-  const v = raw.trim().toLowerCase();
-  if (!v || OPAQUE_KEYWORDS.has(v)) return false;
-  return !v.startsWith("var(");
 }
 
 /**
@@ -53,6 +35,10 @@ function usable<T extends { raw: string }>(tokens: T[]): T[] {
 export function buildTokensCss(m: DesignModel): string {
   const lines: string[] = [];
   lines.push(":root {");
+  for (const role of assignRoles(m.tokens.colors)) {
+    lines.push(`  --color-${role.id}: ${role.hex};`);
+  }
+  lines.push("");
   const colors = m.tokens.colors;
   colors.primary.slice(0, 16).forEach((c, i) => {
     lines.push(`  ${colorVarName("primary", i, c.name)}: ${c.hex};`);
@@ -103,6 +89,10 @@ export function buildTailwindCss(m: DesignModel): string {
   lines.push('@import "tailwindcss";');
   lines.push("");
   lines.push("@theme {");
+  for (const role of assignRoles(m.tokens.colors)) {
+    lines.push(`  --color-${role.id}: ${role.hex};`);
+  }
+  lines.push("");
 
   m.tokens.colors.primary.slice(0, 16).forEach((c, i) => {
     lines.push(`  --color-primary-${i + 1}: ${c.hex};`);

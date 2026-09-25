@@ -1,6 +1,6 @@
-import type { ColorToken, DesignModel, ScalarToken } from "./model";
+import type { ColorRole, ColorToken, DesignModel, ScalarToken } from "./model";
 import { contrastRatio, hexToRgb, relativeLuminance } from "./accessibility";
-import { isUsableValue } from "./token-css";
+import { isUsableValue } from "./token-value";
 
 /**
  * Turns a scan into decisions.
@@ -39,7 +39,7 @@ export function chroma(hex: string): number {
  */
 const VIVID_CHROMA = 0.3;
 
-export type RoleId = "background" | "surface" | "border" | "text" | "muted" | "brand" | "brandAlt";
+export type RoleId = ColorRole;
 
 export interface RoleAssignment {
   id: RoleId;
@@ -57,8 +57,22 @@ export interface RoleAssignment {
  */
 export function assignRoles(colors: DesignModel["tokens"]["colors"]): RoleAssignment[] {
   const all = [...colors.primary, ...colors.neutral].filter((c) => hexToRgb(c.hex) !== null);
-  const lum = (c: ColorToken) => relativeLuminance(hexToRgb(c.hex)!);
-  const ratio = (a: ColorToken, b: ColorToken) => contrastRatio(hexToRgb(a.hex)!, hexToRgb(b.hex)!);
+  type Swatch = Pick<ColorToken, "hex">;
+  const lum = (c: Swatch) => relativeLuminance(hexToRgb(c.hex)!);
+  const ratio = (a: Swatch, b: Swatch) => contrastRatio(hexToRgb(a.hex)!, hexToRgb(b.hex)!);
+
+  const preferred = (role: RoleId, valid: (candidate: Swatch) => boolean = () => true): Swatch | undefined => {
+    const grouped = new Map<string, { score: number; count: number }>();
+    for (const item of colors.evidence ?? []) {
+      if (item.role !== role || !hexToRgb(item.hex)) continue;
+      const previous = grouped.get(item.hex);
+      grouped.set(item.hex, { score: Math.max(previous?.score ?? 0, item.score), count: (previous?.count ?? 0) + (item.count ?? 1) });
+    }
+    return [...grouped.entries()]
+      .sort((a, b) => b[1].score - a[1].score || b[1].count - a[1].count)
+      .map(([hex]) => ({ hex }))
+      .find((candidate) => !taken.has(candidate.hex) && valid(candidate));
+  };
 
   const shades = all.filter((c) => chroma(c.hex) < VIVID_CHROMA).sort((a, b) => b.usage - a.usage);
   /* Ties on usage are common and meaningless, so the more saturated color wins
@@ -69,7 +83,7 @@ export function assignRoles(colors: DesignModel["tokens"]["colors"]): RoleAssign
 
   const out: RoleAssignment[] = [];
   const taken = new Set<string>();
-  const claim = (id: RoleId, token: ColorToken | undefined) => {
+  const claim = (id: RoleId, token: Swatch | undefined) => {
     if (!token || taken.has(token.hex)) return;
     taken.add(token.hex);
     out.push({ id, hex: token.hex });
@@ -77,7 +91,7 @@ export function assignRoles(colors: DesignModel["tokens"]["colors"]): RoleAssign
 
   /* A page ground is near-white or near-black. Anything between is a surface,
      not the canvas, so the extremes are the only candidates. */
-  const bg =
+  const bg = preferred("background") ??
     shades.find((c) => lum(c) >= 0.85 || lum(c) <= 0.12) ??
     shades.slice().sort((a, b) => Math.abs(lum(b) - 0.5) - Math.abs(lum(a) - 0.5))[0];
   claim("background", bg);
@@ -86,26 +100,30 @@ export function assignRoles(colors: DesignModel["tokens"]["colors"]): RoleAssign
     /* Nearly the ground but not quite: cards, headers, wells. */
     claim(
       "surface",
-      shades.find((c) => !taken.has(c.hex) && ratio(c, bg) > 1.02 && ratio(c, bg) < 1.7),
+      preferred("surface", (c) => ratio(c, bg) > 1.02 && ratio(c, bg) < 1.7) ??
+        shades.find((c) => !taken.has(c.hex) && ratio(c, bg) > 1.02 && ratio(c, bg) < 1.7),
     );
     /* Visible as a line, unreadable as text. That gap is what a border is. */
     claim(
       "border",
-      shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 1.7 && ratio(c, bg) < 4.5),
+      preferred("border", (c) => ratio(c, bg) >= 1.7 && ratio(c, bg) < 4.5) ??
+        shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 1.7 && ratio(c, bg) < 4.5),
     );
     claim(
       "text",
-      shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 4.5),
+      preferred("text", (c) => ratio(c, bg) >= 4.5) ??
+        shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 4.5),
     );
     /* Secondary text: still legible, deliberately quieter than the body. */
     claim(
       "muted",
-      shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 3 && ratio(c, bg) < 12),
+      preferred("muted", (c) => ratio(c, bg) >= 3 && ratio(c, bg) < 12) ??
+        shades.find((c) => !taken.has(c.hex) && ratio(c, bg) >= 3 && ratio(c, bg) < 12),
     );
   }
 
-  claim("brand", vivid[0]);
-  claim("brandAlt", vivid[1]);
+  claim("brand", preferred("brand") ?? vivid[0]);
+  claim("brandAlt", preferred("brandAlt") ?? vivid.find((c) => !taken.has(c.hex)));
 
   return out;
 }

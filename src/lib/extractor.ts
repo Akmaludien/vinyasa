@@ -15,6 +15,7 @@ import {
   splitFamilies,
 } from "./units";
 import { createVarResolver } from "./cssvars";
+import { collectColorEvidence } from "./color-evidence";
 import { computeHealth } from "./health";
 import { computeAccessibility } from "./accessibility";
 import { detectComponents } from "./components";
@@ -27,6 +28,7 @@ import type {
   BorderToken,
   BreakpointToken,
   ColorToken,
+  ColorRoleEvidence,
   CssSourceAudit,
   CssSourceInput,
   DesignModel,
@@ -132,6 +134,7 @@ export function extractDesignSystem(
   const audits: CssSourceAudit[] = [];
 
   const colorMap = new Map<string, { rgb: Rgb; count: number; acc: Acc }>();
+  const colorEvidence: ColorRoleEvidence[] = [];
   const familyMap = new Map<string, { raw: string; families: string[]; count: number; acc: Acc }>();
   const sizeMap = new Map<string, { px: number; raw: string; count: number; acc: Acc }>();
   const weightMap = new Map<number, number>();
@@ -340,6 +343,7 @@ export function extractDesignSystem(
     }
 
     if (ast) {
+      colorEvidence.push(...collectColorEvidence(ast, resolver));
       csstree.walk(ast, { visit: "Atrule", enter() { s.atRuleCount++; } });
       csstree.walk(ast, { visit: "Rule", enter() { s.ruleCount++; } });
 
@@ -718,7 +722,7 @@ export function extractDesignSystem(
     },
     pages: [page],
     tokens: {
-      colors: { primary, neutral, hardcoded },
+      colors: { primary, neutral, hardcoded, evidence: colorEvidence },
       typography: { families, sizes, weights, lineHeights, letterSpacings },
       textStyles,
       spacing,

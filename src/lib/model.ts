@@ -51,6 +51,15 @@ export interface ColorToken {
   selectors: string[];
 }
 
+export type ColorRole = "background" | "surface" | "border" | "text" | "muted" | "brand" | "brandAlt";
+
+export interface ColorRoleEvidence {
+  role: ColorRole;
+  hex: string;
+  score: number;
+  count?: number;
+}
+
 export interface FontFamilyToken {
   raw: string;
   families: string[];
@@ -202,6 +211,7 @@ export interface DesignTokens {
     primary: ColorToken[];
     neutral: ColorToken[];
     hardcoded: ColorToken[];
+    evidence?: ColorRoleEvidence[];
   };
   typography: {
     families: FontFamilyToken[];

@@ -247,9 +247,10 @@ function aggregateTokens(all: TokenSet[]): TokenSet {
   for (const c of rawColors) c.usage = total ? Math.round((c.count / total) * 1000) / 10 : 0;
   const primary = rawColors.filter((c) => !c.isNeutral).slice(0, 16);
   const neutral = rawColors.filter((c) => c.isNeutral).slice(0, 12);
+  const evidence = all.flatMap((tokens) => tokens.colors.evidence ?? []);
 
   return {
-    colors: { primary, neutral, hardcoded: [] },
+    colors: { primary, neutral, hardcoded: [], evidence },
     typography: {
       families: mergeByRaw((t) => t.typography.families),
       sizes: mergeByRaw((t) => t.typography.sizes) as TokenSet["typography"]["sizes"],

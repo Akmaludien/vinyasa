@@ -60,6 +60,42 @@ function section(md: string, heading: string): string {
 }
 
 describe("design decisions", () => {
+  it("keeps a light page light when shadows and dark variants dominate the palette", () => {
+    const noisyShadows = Array.from({ length: 30 }, (_, i) => `.shadow-${i} { box-shadow: 0 2px 8px #000000; }`).join("\n");
+    const css = `
+      .theme {
+        --tatami-color-background-base: #ffffff;
+        --tatami-color-text-strong: #191918;
+        --tatami-color-button-primary-background: #0075de;
+      }
+      body { background-color: #ffffff; color: #191918; }
+      .card { background-color: #f6f5f4; }
+      @media (prefers-color-scheme: dark) { body { background: #000000; color: #ffffff; } }
+      ${noisyShadows}
+    `;
+    const scan = extractDesignSystem([{ url: "notion.css", kind: "external", content: css }], "https://notion.com/", "Notion");
+    const roles = new Map(assignRoles(scan.tokens.colors).map((role) => [role.id, role.hex]));
+
+    expect(roles.get("background")).toBe("#ffffff");
+    expect(roles.get("text")).toBe("#191918");
+    expect(roles.get("brand")).toBe("#0075de");
+    const md = buildDesignMd(scan);
+    expect(md).toContain("| Latar | `#ffffff` |");
+    expect(md).toContain("--color-background: #ffffff;");
+    expect(md).toContain("--color-text: #191918;");
+  });
+
+  it("uses a page theme token when no body background is declared", () => {
+    const css = `.theme { --tatami-color-background-base: #ffffff; --tatami-color-text-strong: #191918; }
+      .dark { background: #000000; color: #ffffff; }
+      .shadow { box-shadow: 0 2px 8px #000000; }`;
+    const scan = extractDesignSystem([{ url: "theme.css", kind: "inline", content: css }], "https://notion.com/", "Notion");
+    const roles = new Map(assignRoles(scan.tokens.colors).map((role) => [role.id, role.hex]));
+
+    expect(roles.get("background")).toBe("#ffffff");
+    expect(roles.get("text")).toBe("#191918");
+  });
+
   it("gives the brand role to the vivid color, not to the darkest one", () => {
     const roles = assignRoles(model().tokens.colors);
     const brand = roles.find((r) => r.id === "brand");
